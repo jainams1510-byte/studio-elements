@@ -1,8 +1,10 @@
 import { createClient } from '@supabase/supabase-js'
 import type { Remote } from './types'
 
-const url = import.meta.env.VITE_SUPABASE_URL as string
-const key = import.meta.env.VITE_SUPABASE_KEY as string
+// Both values are public by design; access is controlled by the database rules.
+// The defaults mean the app still builds if the .env file is left out of an upload.
+const url = (import.meta.env.VITE_SUPABASE_URL as string | undefined) ?? 'https://obwkpheueqecifmeaqyc.supabase.co'
+const key = (import.meta.env.VITE_SUPABASE_KEY as string | undefined) ?? 'sb_publishable_N-lYfOCyISXXHGdJi8_yfA_2dX8VrQT'
 
 export const supabase = createClient(url, key)
 
