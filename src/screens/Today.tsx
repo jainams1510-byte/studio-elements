@@ -1,0 +1,129 @@
+import { useEffect, useState } from 'react'
+import { go, useOutboxTick, useProjects } from '../hooks'
+import { listOutbox, syncOutbox } from '../queue'
+import { remote, supabase } from '../supabase'
+import { STAGES } from '../types'
+
+type RecentLog = {
+  id: string
+  note: string
+  room: string | null
+  trade: string | null
+  logged_at: string
+  project_id: string
+  profiles: { full_name: string } | null
+  site_log_photos: { id: string }[]
+}
+
+const dateFormat = new Intl.DateTimeFormat('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })
+const timeFormat = new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })
+
+export default function Today({ outbox, online }: { outbox: number; online: boolean }) {
+  const { projects, error } = useProjects()
+  const tick = useOutboxTick()
+  const [recent, setRecent] = useState<RecentLog[]>([])
+  const [syncing, setSyncing] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let live = true
+    supabase
+      .from('site_logs')
+      .select('id, note, room, trade, logged_at, project_id, profiles(full_name), site_log_photos(id)')
+      .order('logged_at', { ascending: false })
+      .limit(10)
+      .then(({ data }) => {
+        if (live && data) setRecent(data as unknown as RecentLog[])
+      })
+    return () => {
+      live = false
+    }
+  }, [tick])
+
+  useEffect(() => {
+    // Show why a log is stuck, but only when there is signal to blame.
+    listOutbox().then((entries) => {
+      const stuck = entries.find((e) => e.lastError)
+      setUploadError(online && stuck ? stuck.lastError : null)
+    })
+  }, [tick, online])
+
+  async function uploadNow() {
+    setSyncing(true)
+    await syncOutbox(remote)
+    setSyncing(false)
+  }
+
+  const projectName = (id: string) => projects.find((p) => p.id === id)?.name ?? 'Project'
+
+  return (
+    <main className="screen">
+      <header className="topbar">
+        <div>
+          <span className="muted small">{dateFormat.format(new Date())}</span>
+          <h1>Today</h1>
+        </div>
+        <button type="button" className="pill" onClick={uploadNow} disabled={outbox === 0 || syncing || !online}>
+          {outbox === 0 ? 'All uploaded' : syncing ? 'Uploading' : `${outbox} to upload`}
+        </button>
+      </header>
+
+      {!online && <p className="notice">No signal. Logs are saved on this phone and upload when you reopen the app online.</p>}
+      {uploadError && <p className="error" role="alert">A log could not upload: {uploadError}</p>}
+      {error && <p className="error" role="alert">{error}</p>}
+
+      <section>
+        <h2>Projects</h2>
+        {projects.length === 0 && (
+          <p className="muted">
+            No projects yet.{' '}
+            <button type="button" className="link" onClick={() => go('/projects')}>
+              Add the first one
+            </button>
+          </p>
+        )}
+        <ul className="rows">
+          {projects.map((p) => (
+            <li key={p.id}>
+              <button type="button" className="row" onClick={() => go(`/project/${p.id}`)}>
+                <span className="row-title">{p.name}</span>
+                <span className="stagebar" aria-hidden="true">
+                  {STAGES.map((_, i) => (
+                    <span key={i} className={i + 1 < p.stage ? 'done' : i + 1 === p.stage ? 'now' : ''} />
+                  ))}
+                </span>
+                <span className="muted small">
+                  Stage {p.stage} of 8 · {STAGES[p.stage - 1]}
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section>
+        <h2>Latest site logs</h2>
+        {recent.length === 0 && <p className="muted">Nothing logged yet.</p>}
+        <ul className="rows">
+          {recent.map((log) => (
+            <li key={log.id}>
+              <button type="button" className="row" onClick={() => go(`/project/${log.project_id}`)}>
+                <span className="row-title">
+                  {projectName(log.project_id)}
+                  {log.room ? ` · ${log.room}` : ''}
+                  {log.trade ? ` · ${log.trade}` : ''}
+                </span>
+                {log.note && <span>{log.note}</span>}
+                <span className="muted small">
+                  {timeFormat.format(new Date(log.logged_at))}
+                  {log.profiles?.full_name ? ` · ${log.profiles.full_name}` : ''}
+                  {log.site_log_photos.length ? ` · ${log.site_log_photos.length} photos` : ''}
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </section>
+    </main>
+  )
+}
