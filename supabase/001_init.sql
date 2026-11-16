@@ -47,6 +47,11 @@ as $$
   select exists (select 1 from public.profiles p where p.id = (select auth.uid()));
 $$;
 
+-- These helpers are for the rules and the trigger only, not for callers on the web.
+revoke execute on function public.is_team() from public, anon;
+grant execute on function public.is_team() to authenticated;
+revoke execute on function public.handle_new_user() from public, anon, authenticated;
+
 -- 2. Projects ------------------------------------------------------------
 create table if not exists public.projects (
   id uuid primary key default gen_random_uuid(),
@@ -94,7 +99,9 @@ alter table public.projects enable row level security;
 alter table public.site_logs enable row level security;
 alter table public.site_log_photos enable row level security;
 
-revoke all on public.profiles, public.projects, public.site_logs, public.site_log_photos from anon;
+-- Supabase grants every privilege on new tables to signed-in users by default.
+-- Take that away and give back only what the app needs. No delete, no truncate.
+revoke all on public.profiles, public.projects, public.site_logs, public.site_log_photos from anon, authenticated;
 grant select, update on public.profiles to authenticated;
 grant select, insert, update on public.projects to authenticated;
 grant select, insert, update on public.site_logs to authenticated;
