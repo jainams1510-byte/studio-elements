@@ -37,7 +37,12 @@ from auth.users u
 on conflict (id) do nothing;
 
 -- "Is the signed-in person on the team?" Used by every rule below.
-create or replace function public.is_team()
+-- Kept in a private schema so it is not reachable through the web API.
+create schema if not exists private;
+revoke all on schema private from public, anon;
+grant usage on schema private to authenticated;
+
+create or replace function private.is_team()
 returns boolean
 language sql
 stable
@@ -47,10 +52,10 @@ as $$
   select exists (select 1 from public.profiles p where p.id = (select auth.uid()));
 $$;
 
--- These helpers are for the rules and the trigger only, not for callers on the web.
-revoke execute on function public.is_team() from public, anon;
-grant execute on function public.is_team() to authenticated;
+revoke execute on function private.is_team() from public, anon;
+grant execute on function private.is_team() to authenticated;
 revoke execute on function public.handle_new_user() from public, anon, authenticated;
+drop function if exists public.is_team();
 
 -- 2. Projects ------------------------------------------------------------
 create table if not exists public.projects (
@@ -109,7 +114,7 @@ grant select, insert, update on public.site_log_photos to authenticated;
 
 drop policy if exists "team reads profiles" on public.profiles;
 create policy "team reads profiles" on public.profiles
-  for select to authenticated using (public.is_team());
+  for select to authenticated using (private.is_team());
 
 drop policy if exists "person edits own profile" on public.profiles;
 create policy "person edits own profile" on public.profiles
@@ -118,20 +123,20 @@ create policy "person edits own profile" on public.profiles
 
 drop policy if exists "team reads projects" on public.projects;
 create policy "team reads projects" on public.projects
-  for select to authenticated using (public.is_team());
+  for select to authenticated using (private.is_team());
 drop policy if exists "team adds projects" on public.projects;
 create policy "team adds projects" on public.projects
-  for insert to authenticated with check (public.is_team());
+  for insert to authenticated with check (private.is_team());
 drop policy if exists "team edits projects" on public.projects;
 create policy "team edits projects" on public.projects
-  for update to authenticated using (public.is_team()) with check (public.is_team());
+  for update to authenticated using (private.is_team()) with check (private.is_team());
 
 drop policy if exists "team reads logs" on public.site_logs;
 create policy "team reads logs" on public.site_logs
-  for select to authenticated using (public.is_team());
+  for select to authenticated using (private.is_team());
 drop policy if exists "team adds logs" on public.site_logs;
 create policy "team adds logs" on public.site_logs
-  for insert to authenticated with check (public.is_team() and created_by = (select auth.uid()));
+  for insert to authenticated with check (private.is_team() and created_by = (select auth.uid()));
 -- Update is allowed only so the same person's retried upload can land.
 drop policy if exists "author re-uploads own log" on public.site_logs;
 create policy "author re-uploads own log" on public.site_logs
@@ -140,13 +145,13 @@ create policy "author re-uploads own log" on public.site_logs
 
 drop policy if exists "team reads log photos" on public.site_log_photos;
 create policy "team reads log photos" on public.site_log_photos
-  for select to authenticated using (public.is_team());
+  for select to authenticated using (private.is_team());
 drop policy if exists "team adds log photos" on public.site_log_photos;
 create policy "team adds log photos" on public.site_log_photos
-  for insert to authenticated with check (public.is_team());
+  for insert to authenticated with check (private.is_team());
 drop policy if exists "team re-uploads log photos" on public.site_log_photos;
 create policy "team re-uploads log photos" on public.site_log_photos
-  for update to authenticated using (public.is_team()) with check (public.is_team());
+  for update to authenticated using (private.is_team()) with check (private.is_team());
 
 -- 5. Photo and voice storage --------------------------------------------
 insert into storage.buckets (id, name, public)
@@ -155,12 +160,12 @@ on conflict (id) do nothing;
 
 drop policy if exists "team reads site media" on storage.objects;
 create policy "team reads site media" on storage.objects
-  for select to authenticated using (bucket_id = 'site-media' and public.is_team());
+  for select to authenticated using (bucket_id = 'site-media' and private.is_team());
 drop policy if exists "team adds site media" on storage.objects;
 create policy "team adds site media" on storage.objects
-  for insert to authenticated with check (bucket_id = 'site-media' and public.is_team());
+  for insert to authenticated with check (bucket_id = 'site-media' and private.is_team());
 drop policy if exists "team re-uploads site media" on storage.objects;
 create policy "team re-uploads site media" on storage.objects
   for update to authenticated
-  using (bucket_id = 'site-media' and public.is_team())
-  with check (bucket_id = 'site-media' and public.is_team());
+  using (bucket_id = 'site-media' and private.is_team())
+  with check (bucket_id = 'site-media' and private.is_team());
