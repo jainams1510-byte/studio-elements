@@ -95,3 +95,33 @@ button:disabled { opacity: 0.55; cursor: default; }
 .fab { width: 56px; height: 56px; border: 0; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: flex; align-items: center; justify-content: center; }
 
 .signin { max-width: 420px; min-height: 100%; margin: 0 auto; padding: 24px; display: flex; flex-direction: column; justify-content: center; gap: 28px; }
+
+/* Project sections */
+.tabs { display: flex; border-bottom: 1px solid var(--line); margin-top: -8px; }
+.tabs button { flex: 1; min-height: 44px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--muted); font-size: 14px; }
+.tabs button.on { color: var(--ink); font-weight: 600; border-bottom-color: var(--accent); }
+
+/* Drawing register */
+.row-line { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.row-line.padded { padding: 10px 0; }
+.rev { flex: none; padding: 2px 8px; border: 1px solid var(--line); border-radius: 4px; font-size: 13px; font-weight: 600; color: var(--muted); }
+.rev.con { border-color: var(--accent); color: var(--accent); }
+.rev.big { font-size: 18px; padding: 4px 12px; }
+.dot { flex: none; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 8px; vertical-align: middle; }
+.flag-text { color: var(--ink); font-weight: 500; }
+.flag { padding: 10px 12px; border: 1px solid var(--accent); border-radius: 6px; font-size: 14px; font-weight: 500; }
+.flagrow { flex-direction: row; align-items: flex-start; gap: 4px; }
+.flagrow .dot { margin-top: 7px; }
+.stack-tight { display: flex; flex-direction: column; gap: 4px; }
+.card.faded { background: transparent; }
+.issues { display: flex; flex-direction: column; gap: 8px; padding-top: 8px; border-top: 1px solid var(--line-soft); font-size: 13px; }
+.issues li { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.thumb { width: 56px; height: 56px; object-fit: cover; border-radius: 4px; display: block; }
+.topgap { margin-top: 24px; }
+
+/* Buttons */
+.button-row { display: flex; gap: 10px; }
+.button-row > * { flex: 1; }
+.secondary { min-height: 52px; width: 100%; border: 1px solid var(--line); border-radius: 6px; background: transparent; font-size: 16px; }
+.danger { min-height: 52px; width: 100%; border: 0; border-radius: 6px; background: var(--danger); color: #fff; font-size: 16px; font-weight: 600; }
+.danger-outline { min-height: 52px; width: 100%; border: 1px solid var(--danger); border-radius: 6px; background: transparent; color: var(--danger); font-size: 16px; }

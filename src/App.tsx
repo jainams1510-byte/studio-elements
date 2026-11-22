@@ -2,7 +2,9 @@ import type { Session } from '@supabase/supabase-js'
 import { useEffect, useState } from 'react'
 import { go, useAutoSync, useHashRoute, useOnline, useOutboxCount } from './hooks'
 import NewLog from './screens/NewLog'
-import ProjectLogs from './screens/ProjectLogs'
+import DrawingDetail from './screens/DrawingDetail'
+import EditProject from './screens/EditProject'
+import ProjectPage from './screens/ProjectPage'
 import Projects from './screens/Projects'
 import SignIn from './screens/SignIn'
 import Today from './screens/Today'
@@ -44,13 +46,17 @@ export default function App() {
     )
   }
 
+  // Routes: /log, /projects, /project/:id, /project/:id/drawings, /project/:id/edit, /drawing/:id
+  const [section, id, sub] = route.split('/').filter(Boolean)
   let screen
-  if (route === '/log') screen = <NewLog outbox={outbox} />
-  else if (route === '/projects') screen = <Projects />
-  else if (route.startsWith('/project/')) screen = <ProjectLogs projectId={route.slice('/project/'.length)} />
+  if (section === 'log') screen = <NewLog outbox={outbox} />
+  else if (section === 'projects') screen = <Projects />
+  else if (section === 'project' && id && sub === 'edit') screen = <EditProject key={id} projectId={id} />
+  else if (section === 'project' && id) screen = <ProjectPage key={id} projectId={id} tab={sub === 'drawings' ? 'drawings' : 'logs'} />
+  else if (section === 'drawing' && id) screen = <DrawingDetail key={id} drawingId={id} />
   else screen = <Today outbox={outbox} online={online} />
 
-  const onLog = route === '/log'
+  const onLog = section === 'log'
   return (
     <div className="app">
       {screen}
@@ -67,7 +73,7 @@ export default function App() {
           </button>
           <button
             type="button"
-            className={route === '/projects' || route.startsWith('/project/') ? 'tab active' : 'tab'}
+            className={section === 'projects' || section === 'project' || section === 'drawing' ? 'tab active' : 'tab'}
             onClick={() => go('/projects')}
           >
             Projects

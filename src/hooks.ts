@@ -79,25 +79,33 @@ export function useAutoSync(signedIn: boolean): void {
   }, [signedIn])
 }
 
+export const PROJECT_SELECT = 'id, name, code, stage, rooms, trades, archived'
+
+/** Fetch the active projects and refresh the phone's copy. Throws if the server can't be reached. */
+export async function refreshProjects(): Promise<Project[]> {
+  const { data, error } = await supabase
+    .from('projects')
+    .select(PROJECT_SELECT)
+    .eq('archived', false)
+    .order('name')
+  if (error) throw new Error(error.message)
+  const list = (data ?? []) as Project[]
+  await cacheSet('projects', list)
+  return list
+}
+
 /** Projects, shown from the phone's copy first so the list works with no signal. */
 export function useProjects(): { projects: Project[]; reload: () => Promise<void>; error: string | null } {
   const [projects, setProjects] = useState<Project[]>([])
   const [error, setError] = useState<string | null>(null)
 
   const reload = useCallback(async () => {
-    const { data, error: err } = await supabase
-      .from('projects')
-      .select('id, name, code, stage, rooms, trades, archived')
-      .eq('archived', false)
-      .order('name')
-    if (err) {
-      setError(navigator.onLine ? err.message : null)
-      return
+    try {
+      setProjects(await refreshProjects())
+      setError(null)
+    } catch (err) {
+      setError(navigator.onLine && err instanceof Error ? err.message : null)
     }
-    setError(null)
-    const list = (data ?? []) as Project[]
-    setProjects(list)
-    await cacheSet('projects', list)
   }, [])
 
   useEffect(() => {

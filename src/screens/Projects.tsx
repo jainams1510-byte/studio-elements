@@ -1,7 +1,7 @@
-import { useState, type FormEvent } from 'react'
-import { go, useProjects } from '../hooks'
+import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { go, PROJECT_SELECT, useProjects } from '../hooks'
 import { supabase } from '../supabase'
-import { STAGES } from '../types'
+import { STAGES, type Project } from '../types'
 
 function parseList(text: string): string[] {
   return [...new Set(text.split(',').map((s) => s.trim()).filter(Boolean))]
@@ -14,10 +14,38 @@ export default function Projects() {
   const [rooms, setRooms] = useState('')
   const [busy, setBusy] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
+  const [removed, setRemoved] = useState<Project[]>([])
+
+  const loadRemoved = useCallback(async () => {
+    const { data } = await supabase.from('projects').select(PROJECT_SELECT).eq('archived', true).order('name')
+    setRemoved((data ?? []) as Project[])
+  }, [])
+
+  useEffect(() => {
+    void loadRemoved()
+  }, [loadRemoved])
+
+  async function restore(id: string) {
+    const { error: err } = await supabase.from('projects').update({ archived: false }).eq('id', id)
+    if (err) {
+      setFormError(navigator.onLine ? err.message : 'No signal. Restoring a project needs a connection.')
+      return
+    }
+    await Promise.all([reload(), loadRemoved()])
+  }
 
   async function add(e: FormEvent) {
     e.preventDefault()
     if (name.trim() === '') return
+    const clash = [...projects, ...removed].find((p) => p.name.trim().toLowerCase() === name.trim().toLowerCase())
+    if (clash) {
+      setFormError(
+        clash.archived
+          ? `A removed project is already called ${clash.name}. Restore it below instead.`
+          : `A project called ${clash.name} already exists.`,
+      )
+      return
+    }
     setBusy(true)
     setFormError(null)
     const { error: err } = await supabase
@@ -86,6 +114,22 @@ export default function Projects() {
           </button>
         </form>
       </section>
+
+      {removed.length > 0 && (
+        <section>
+          <h2>Removed projects</h2>
+          <ul className="rows">
+            {removed.map((p) => (
+              <li key={p.id} className="row-line padded">
+                <span className="muted">{p.name}</span>
+                <button type="button" className="pill" onClick={() => restore(p.id)}>
+                  Restore
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </main>
   )
 }

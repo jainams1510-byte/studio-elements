@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { DRAWING_SELECT, needsAttention, siteStatus, siteStatusText, type Drawing } from '../drawings'
 import { go, useOutboxTick, useProjects } from '../hooks'
 import { listOutbox, syncOutbox } from '../queue'
 import { remote, supabase } from '../supabase'
@@ -25,6 +26,21 @@ export default function Today({ outbox, online }: { outbox: number; online: bool
   const [recent, setRecent] = useState<RecentLog[]>([])
   const [syncing, setSyncing] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
+  const [drawings, setDrawings] = useState<Drawing[]>([])
+
+  useEffect(() => {
+    let live = true
+    supabase
+      .from('drawings')
+      .select(DRAWING_SELECT)
+      .eq('archived', false)
+      .then(({ data }) => {
+        if (live && data) setDrawings(data as unknown as Drawing[])
+      })
+    return () => {
+      live = false
+    }
+  }, [])
 
   useEffect(() => {
     let live = true
@@ -57,6 +73,13 @@ export default function Today({ outbox, online }: { outbox: number; online: bool
 
   const projectName = (id: string) => projects.find((p) => p.id === id)?.name ?? 'Project'
 
+  // Prints on site that are out of date or not for construction, on active projects only.
+  const activeIds = new Set(projects.map((p) => p.id))
+  const flags = drawings
+    .filter((d) => activeIds.has(d.project_id))
+    .map((d) => ({ d, status: siteStatus(d) }))
+    .filter(({ status }) => needsAttention(status))
+
   return (
     <main className="screen">
       <header className="topbar">
@@ -72,6 +95,27 @@ export default function Today({ outbox, online }: { outbox: number; online: bool
       {!online && <p className="notice">No signal. Logs are saved on this phone and upload when you reopen the app online.</p>}
       {uploadError && <p className="error" role="alert">A log could not upload: {uploadError}</p>}
       {error && <p className="error" role="alert">{error}</p>}
+
+      {flags.length > 0 && (
+        <section>
+          <h2>Needs you</h2>
+          <ul className="rows">
+            {flags.map(({ d, status }) => (
+              <li key={d.id}>
+                <button type="button" className="row flagrow" onClick={() => go(`/drawing/${d.id}`)}>
+                  <span className="dot" aria-hidden="true" />
+                  <span className="stack-tight">
+                    <span className="row-title">{status.kind === 'outdated' ? 'Site print is out of date' : 'Preliminary print on site'}</span>
+                    <span className="muted small">
+                      {projectName(d.project_id)} · {d.number} · {siteStatusText(status)}
+                    </span>
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <section>
         <h2>Projects</h2>
