@@ -14,17 +14,19 @@ the drawing register (sheets, P/R revisions, issues to site, out-of-date print f
 | `src/drawings.ts` | Revision codes and the rules for what the site holds |
 | `src/review.ts` | When an AI summary counts as verified; report weeks |
 | `supabase/003_ai_layer.sql` | Database part 3: AI results, reviews, weekly reports |
+| `supabase/004_log_edit_remove.sql` | Database part 4: owners edit, remove and restore site logs |
 | `supabase/functions/ai/` | Server function that calls Gemini (transcribe, weekly_report) |
 | `supabase/001_init.sql` | Database part 1: people, projects, site log, photo storage |
 | `supabase/002_drawing_register.sql` | Database part 2: drawing register |
 | `e2e/smoke.py` | Browser test of sign-in and the offline site log, mocked server |
 | `e2e/register.py` | Browser test of project editing and the drawing register, mocked server |
 | `e2e/ai.py` | Browser test of the review queue and weekly reports, mocked server and AI |
+| `e2e/logs.py` | Browser test of owners editing, removing and restoring logs, mocked server |
 | `.env` | Supabase address and public key (public by design) |
 
 ## One-time setup
 
-1. **Database.** Supabase dashboard, SQL editor: run `supabase/001_init.sql`, `002_drawing_register.sql`, then `003_ai_layer.sql`.
+1. **Database.** Supabase dashboard, SQL editor: run `supabase/001_init.sql`, `002_drawing_register.sql`, `003_ai_layer.sql`, then `004_log_edit_remove.sql`.
    Set the site coordinator's `role` in `profiles` to `coordinator` (owners also count as senior).
 2. **AI.** Supabase dashboard, Edge Functions: deploy `supabase/functions/ai` with JWT checking off
    (the function checks the team itself), and add the secret `GEMINI_API_KEY`. Never put that key in the app.
@@ -49,7 +51,9 @@ and `python3 e2e/smoke.py` (or `register.py`, `ai.py`) in another (needs Python 
 
 - A log is removed from the phone only after the server has accepted every file and the record.
 - Every log has an id made on the phone, so a retried upload never creates a duplicate.
-- Nothing can be deleted from the app. Removing a project hides it; it can be restored.
+- Nothing can be deleted from the app. Removing a project, a site log or a photo hides it; it can be restored.
+- Only an owner can edit or remove a site log; the database ignores anyone else's change.
+  A retried upload never overwrites a stored log. Roles are set in the Supabase dashboard only.
 - Only signed-in team members can read or write anything.
 - An AI summary changes nothing official. It is verified only when two different people confirm it,
   one of them the coordinator or an owner; editing it clears every confirmation.
