@@ -9,6 +9,7 @@ type RecentLog = {
   note: string
   room: string | null
   trade: string | null
+  audio_path: string | null
   logged_at: string
   project_id: string
   profiles: { full_name: string } | null
@@ -29,7 +30,7 @@ export default function Today({ outbox, online }: { outbox: number; online: bool
     let live = true
     supabase
       .from('site_logs')
-      .select('id, note, room, trade, logged_at, project_id, profiles(full_name), site_log_photos(id)')
+      .select('id, note, room, trade, audio_path, logged_at, project_id, profiles(full_name), site_log_photos(id)')
       .order('logged_at', { ascending: false })
       .limit(10)
       .then(({ data }) => {
@@ -117,7 +118,10 @@ export default function Today({ outbox, online }: { outbox: number; online: bool
                 <span className="muted small">
                   {timeFormat.format(new Date(log.logged_at))}
                   {log.profiles?.full_name ? ` · ${log.profiles.full_name}` : ''}
-                  {log.site_log_photos.length ? ` · ${log.site_log_photos.length} photos` : ''}
+                  {log.site_log_photos.length
+                    ? ` · ${log.site_log_photos.length} ${log.site_log_photos.length === 1 ? 'photo' : 'photos'}`
+                    : ''}
+                  {log.audio_path ? ' · voice note' : ''}
                 </span>
               </button>
             </li>
