@@ -155,3 +155,34 @@ describe('uploading', () => {
     expect(server.files.get('project-1/log-1/voice.webm')).toBe(1)
   })
 })
+
+describe('transcription requests', () => {
+  it('asks for a transcript once, only for logs with a voice note, after the upload', async () => {
+    const server = fakeRemote()
+    const asked: string[] = []
+    const remote: Remote = { ...server.remote, requestTranscript: async (id) => { asked.push(id) } }
+    await saveLog(entry('voice', { loggedAt: '2026-11-15T06:00:00.000Z' }))
+    await saveLog(entry('silent', { audio: null, loggedAt: '2026-11-15T07:00:00.000Z' }))
+    await syncOutbox(remote)
+    expect(asked).toEqual(['voice'])
+    expect(server.logs.has('voice')).toBe(true)
+  })
+
+  it('a failed transcript request does not keep the log on the phone', async () => {
+    const server = fakeRemote()
+    const remote: Remote = { ...server.remote, requestTranscript: async () => { throw new Error('AI is down') } }
+    await saveLog(entry('voice'))
+    const result = await syncOutbox(remote)
+    expect(result).toEqual({ uploaded: 1, failed: 0 })
+    expect(await countOutbox()).toBe(0)
+  })
+
+  it('no request is made when the upload fails', async () => {
+    const server = fakeRemote()
+    server.state.failLogs = true
+    const asked: string[] = []
+    await saveLog(entry('voice'))
+    await syncOutbox({ ...server.remote, requestTranscript: async (id) => { asked.push(id) } })
+    expect(asked).toEqual([])
+  })
+})

@@ -84,6 +84,10 @@ async function run(remote: Remote): Promise<SyncResult> {
       // Removed from the phone only after the server has accepted everything.
       await db.delete('outbox', entry.id)
       uploaded += 1
+      // Transcription runs on the server and can take a minute: start it, don't wait for it.
+      if (entry.audio && remote.requestTranscript) {
+        remote.requestTranscript(entry.id).catch(() => undefined)
+      }
     } catch (err) {
       failed += 1
       const message = err instanceof Error ? err.message : String(err)

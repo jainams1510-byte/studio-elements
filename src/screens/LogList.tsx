@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { AI_SELECT, stateOf, STATE_LABEL, type AiRow } from '../ai'
+import { go } from '../hooks'
 import { MEDIA_BUCKET, supabase } from '../supabase'
 
 type Log = {
@@ -10,6 +12,7 @@ type Log = {
   logged_at: string
   profiles: { full_name: string } | null
   site_log_photos: { id: string; path: string }[]
+  site_log_ai: AiRow | null
 }
 
 const timeFormat = new Intl.DateTimeFormat('en-IN', { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })
@@ -24,7 +27,7 @@ export default function LogList({ projectId }: { projectId: string }) {
     async function load() {
       const { data, error } = await supabase
         .from('site_logs')
-        .select('id, note, room, trade, audio_path, logged_at, profiles(full_name), site_log_photos(id, path)')
+        .select(`id, project_id, note, room, trade, audio_path, logged_at, profiles(full_name), site_log_photos(id, path), site_log_ai(${AI_SELECT})`)
         .eq('project_id', projectId)
         .order('logged_at', { ascending: false })
         .limit(50)
@@ -78,6 +81,18 @@ export default function LogList({ projectId }: { projectId: string }) {
               </div>
             )}
             {log.audio_path && urls[log.audio_path] && <audio controls src={urls[log.audio_path]} />}
+            {log.audio_path && (() => {
+              const st = stateOf({ ...log, project_id: projectId })
+              const summary = log.site_log_ai?.status === 'done' ? log.site_log_ai.final_summary : null
+              return (
+                <div className="stack-tight">
+                  {summary && <p className="summary">{summary}</p>}
+                  <button type="button" className="link small left" onClick={() => go('/review')}>
+                    <span className={st === 'verified' ? 'tag ok' : st === 'unverified' ? 'tag' : 'tag muted'}>{STATE_LABEL[st]}</span>
+                  </button>
+                </div>
+              )
+            })()}
             {log.profiles?.full_name && <span className="muted small">Logged by {log.profiles.full_name}</span>}
           </li>
         ))}

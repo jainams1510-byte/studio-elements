@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { DRAWING_SELECT, needsAttention, siteStatus, siteStatusText, type Drawing } from '../drawings'
+import { loadVoiceLogs, stateOf } from '../ai'
 import { go, useOutboxTick, useProjects } from '../hooks'
+import { reportDue, weekStart } from '../review'
 import { listOutbox, syncOutbox } from '../queue'
 import { remote, supabase } from '../supabase'
 import { STAGES } from '../types'
@@ -27,6 +29,31 @@ export default function Today({ outbox, online }: { outbox: number; online: bool
   const [syncing, setSyncing] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [drawings, setDrawings] = useState<Drawing[]>([])
+  const [toReview, setToReview] = useState(0)
+  const [approvedThisWeek, setApprovedThisWeek] = useState<Set<string> | null>(null)
+
+  useEffect(() => {
+    let live = true
+    loadVoiceLogs()
+      .then((list) => {
+        if (live) setToReview(list.filter((l) => !['verified', 'rejected'].includes(stateOf(l))).length)
+      })
+      .catch(() => undefined)
+    if (reportDue()) {
+      supabase
+        .from('weekly_reports')
+        .select('project_id')
+        .eq('week_start', weekStart())
+        .eq('kind', 'client')
+        .eq('status', 'approved')
+        .then(({ data }) => {
+          if (live && data) setApprovedThisWeek(new Set(data.map((r) => r.project_id as string)))
+        })
+    }
+    return () => {
+      live = false
+    }
+  }, [tick])
 
   useEffect(() => {
     let live = true
@@ -79,6 +106,8 @@ export default function Today({ outbox, online }: { outbox: number; online: bool
     .filter((d) => activeIds.has(d.project_id))
     .map((d) => ({ d, status: siteStatus(d) }))
     .filter(({ status }) => needsAttention(status))
+  const reportsDue = approvedThisWeek ? projects.filter((p) => !approvedThisWeek.has(p.id)) : []
+  const anyFlags = flags.length > 0 || toReview > 0 || reportsDue.length > 0
 
   return (
     <main className="screen">
@@ -96,10 +125,32 @@ export default function Today({ outbox, online }: { outbox: number; online: bool
       {uploadError && <p className="error" role="alert">A log could not upload: {uploadError}</p>}
       {error && <p className="error" role="alert">{error}</p>}
 
-      {flags.length > 0 && (
+      {anyFlags && (
         <section>
           <h2>Needs you</h2>
           <ul className="rows">
+            {toReview > 0 && (
+              <li>
+                <button type="button" className="row flagrow" onClick={() => go('/review')}>
+                  <span className="dot" aria-hidden="true" />
+                  <span className="stack-tight">
+                    <span className="row-title">{toReview === 1 ? '1 voice note to review' : `${toReview} voice notes to review`}</span>
+                    <span className="muted small">AI summaries need two people to confirm</span>
+                  </span>
+                </button>
+              </li>
+            )}
+            {reportsDue.map((p) => (
+              <li key={`report-${p.id}`}>
+                <button type="button" className="row flagrow" onClick={() => go(`/project/${p.id}/reports`)}>
+                  <span className="dot" aria-hidden="true" />
+                  <span className="stack-tight">
+                    <span className="row-title">Weekly report due</span>
+                    <span className="muted small">{p.name} · draft, check and approve</span>
+                  </span>
+                </button>
+              </li>
+            ))}
             {flags.map(({ d, status }) => (
               <li key={d.id}>
                 <button type="button" className="row flagrow" onClick={() => go(`/drawing/${d.id}`)}>

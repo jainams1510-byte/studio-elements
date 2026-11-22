@@ -26,4 +26,26 @@ export const remote: Remote = {
     const { error } = await supabase.from('site_log_photos').upsert(rows, { onConflict: 'id' })
     if (error) throw new Error(error.message)
   },
+  async requestTranscript(logId) {
+    await callAi({ action: 'transcribe', log_id: logId })
+  },
+}
+
+/** Call the AI server function. Throws with the server's own message on failure. */
+export async function callAi<T = Record<string, unknown>>(body: Record<string, unknown>): Promise<T> {
+  const { data, error } = await supabase.functions.invoke('ai', { body })
+  if (error) {
+    let message = error.message
+    const context = (error as { context?: Response }).context
+    if (context && typeof context.json === 'function') {
+      try {
+        const parsed = await context.json()
+        if (parsed?.error) message = parsed.error
+      } catch {
+        // keep the generic message
+      }
+    }
+    throw new Error(message)
+  }
+  return data as T
 }

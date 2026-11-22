@@ -6,6 +6,7 @@ import DrawingDetail from './screens/DrawingDetail'
 import EditProject from './screens/EditProject'
 import ProjectPage from './screens/ProjectPage'
 import Projects from './screens/Projects'
+import Review from './screens/Review'
 import SignIn from './screens/SignIn'
 import Today from './screens/Today'
 import { supabase } from './supabase'
@@ -52,8 +53,9 @@ export default function App() {
   if (section === 'log') screen = <NewLog outbox={outbox} />
   else if (section === 'projects') screen = <Projects />
   else if (section === 'project' && id && sub === 'edit') screen = <EditProject key={id} projectId={id} />
-  else if (section === 'project' && id) screen = <ProjectPage key={id} projectId={id} tab={sub === 'drawings' ? 'drawings' : 'logs'} />
+  else if (section === 'project' && id) screen = <ProjectPage key={id} projectId={id} tab={sub === 'drawings' ? 'drawings' : sub === 'reports' ? 'reports' : 'logs'} />
   else if (section === 'drawing' && id) screen = <DrawingDetail key={id} drawingId={id} />
+  else if (section === 'review') screen = <Review />
   else screen = <Today outbox={outbox} online={online} />
 
   const onLog = section === 'log'
@@ -64,6 +66,9 @@ export default function App() {
         <nav className="tabbar" aria-label="Main">
           <button type="button" className={route === '/' ? 'tab active' : 'tab'} onClick={() => go('/')}>
             Today
+          </button>
+          <button type="button" className={section === 'review' ? 'tab active' : 'tab'} onClick={() => go('/review')}>
+            Review
           </button>
           <button type="button" className="fab" aria-label="New site log" onClick={() => go('/log')}>
             <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">

@@ -42,6 +42,8 @@ export type Remote = {
   uploadFile(path: string, blob: Blob, mime: string): Promise<void>
   upsertLog(row: LogRow): Promise<void>
   upsertPhotos(rows: PhotoRow[]): Promise<void>
+  /** Ask the server to transcribe a voice note. Optional, and never blocks the upload. */
+  requestTranscript?(logId: string): Promise<void>
 }
 
 export const STAGES = [
