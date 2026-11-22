@@ -181,12 +181,13 @@ const TRANSCRIPT_SCHEMA = {
 async function transcribe(admin: SupabaseClient, apiKey: string, logId: string, force: boolean) {
   const { data: log, error } = await admin
     .from('site_logs')
-    .select('id, project_id, room, trade, note, audio_path, projects(rooms, trades)')
+    .select('id, project_id, room, trade, note, audio_path, removed_at, projects(rooms, trades)')
     .eq('id', logId)
     .maybeSingle()
   if (error) throw new HttpError(500, error.message)
   if (!log) throw new HttpError(404, 'Site log not found.')
   if (!log.audio_path) throw new HttpError(400, 'This log has no voice note.')
+  if (log.removed_at) throw new HttpError(400, 'This log has been removed.')
 
   const { data: existing } = await admin.from('site_log_ai').select('status').eq('log_id', logId).maybeSingle()
   if (existing?.status === 'done' && !force) return { status: 'done', skipped: true }
@@ -263,8 +264,9 @@ async function weeklyReport(admin: SupabaseClient, apiKey: string, projectId: st
 
   const { data: logs, error: logErr } = await admin
     .from('site_logs')
-    .select('id, note, room, trade, audio_path, logged_at, site_log_photos(id), site_log_ai(status, final_summary, site_log_reviews(reviewer_id, decision, profiles(role)))')
+    .select('id, note, room, trade, audio_path, logged_at, site_log_photos(id, removed_at), site_log_ai(status, final_summary, site_log_reviews(reviewer_id, decision, profiles(role)))')
     .eq('project_id', projectId)
+    .is('removed_at', null)
     .gte('logged_at', from)
     .lt('logged_at', to)
     .order('logged_at')
@@ -272,7 +274,7 @@ async function weeklyReport(admin: SupabaseClient, apiKey: string, projectId: st
 
   type LogRow = {
     note: string; room: string | null; trade: string | null; audio_path: string | null; logged_at: string
-    site_log_photos: { id: string }[]
+    site_log_photos: { id: string; removed_at: string | null }[]
     site_log_ai: { status: string; final_summary: string | null; site_log_reviews: Review[] } | null
   }
   const facts: { date: string; room: string | null; trade: string | null; typed: string | null; voice_summary: string | null; photos: number }[] = []
@@ -281,10 +283,11 @@ async function weeklyReport(admin: SupabaseClient, apiKey: string, projectId: st
     const ai = l.site_log_ai
     const ok = ai ? verified(ai.status, ai.site_log_reviews ?? []) : false
     if (l.audio_path && !ok) awaiting += 1
+    const photos = l.site_log_photos.filter((ph) => !ph.removed_at).length
     const typed = l.note?.trim() || null
     const voice = ok ? ai?.final_summary?.trim() || null : null
-    if (!typed && !voice && l.site_log_photos.length === 0) continue
-    facts.push({ date: showDate(l.logged_at), room: l.room, trade: l.trade, typed, voice_summary: voice, photos: l.site_log_photos.length })
+    if (!typed && !voice && photos === 0) continue
+    facts.push({ date: showDate(l.logged_at), room: l.room, trade: l.trade, typed, voice_summary: voice, photos })
   }
 
   const { data: drawings } = await admin

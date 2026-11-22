@@ -16,7 +16,7 @@ type RecentLog = {
   logged_at: string
   project_id: string
   profiles: { full_name: string } | null
-  site_log_photos: { id: string }[]
+  site_log_photos: { id: string; removed_at?: string | null }[]
 }
 
 const dateFormat = new Intl.DateTimeFormat('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })
@@ -73,11 +73,14 @@ export default function Today({ outbox, online }: { outbox: number; online: bool
     let live = true
     supabase
       .from('site_logs')
-      .select('id, note, room, trade, audio_path, logged_at, project_id, profiles(full_name), site_log_photos(id)')
+      .select('id, note, room, trade, audio_path, logged_at, project_id, profiles(full_name), site_log_photos(id, removed_at)')
+      .is('removed_at', null)
       .order('logged_at', { ascending: false })
       .limit(10)
       .then(({ data }) => {
-        if (live && data) setRecent(data as unknown as RecentLog[])
+        if (!live || !data) return
+        const list = data as unknown as RecentLog[]
+        setRecent(list.map((l) => ({ ...l, site_log_photos: l.site_log_photos.filter((ph) => !ph.removed_at) })))
       })
     return () => {
       live = false

@@ -51,6 +51,7 @@ export async function loadVoiceLogs(limit = 60): Promise<VoiceLog[]> {
     .from('site_logs')
     .select(`id, project_id, note, room, trade, audio_path, logged_at, profiles(full_name), site_log_ai(${AI_SELECT})`)
     .not('audio_path', 'is', null)
+    .is('removed_at', null)
     .order('logged_at', { ascending: false })
     .limit(limit)
   if (error) throw new Error(error.message)

@@ -138,3 +138,11 @@ textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--line); borde
 .link.left { text-align: left; min-height: 36px; text-decoration: none; }
 .grow { flex: 1; }
 .tab { min-width: 64px; }
+
+/* Editing and removing logs (owners) */
+.tile { position: relative; }
+.tile-action { position: absolute; left: 4px; right: 4px; bottom: 4px; min-height: 32px; border: 0; border-radius: 4px; background: rgba(34, 34, 34, 0.78); color: #fff; font: inherit; font-size: 13px; font-weight: 600; }
+.tile.removing img { opacity: 0.3; }
+.tile.removing .tile-action { background: var(--accent); }
+.confirm { padding: 12px; border: 1px solid var(--line); border-radius: 6px; }
+.card.removed { opacity: 0.75; }

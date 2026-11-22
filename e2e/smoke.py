@@ -41,7 +41,7 @@ class Server:
     """Records what the app sends, and can be told to refuse a log once."""
 
     def __init__(self):
-        self.files, self.logs, self.photos = [], [], []
+        self.files, self.logs, self.photos, self.prefers = [], [], [], []
         self.fail_next_log = False
 
     def handle(self, route):
@@ -67,9 +67,11 @@ class Server:
                 self.fail_next_log = False
                 return route.fulfill(status=500, headers=hdr, body=json.dumps({"message": "server refused"}))
             self.logs.append(json.loads(req.post_data))
+            self.prefers.append(req.headers.get("prefer") or "")
             return route.fulfill(status=201, headers=hdr, body="")
         if "/rest/v1/site_log_photos" in url and method == "POST":
             self.photos.extend(json.loads(req.post_data))
+            self.prefers.append(req.headers.get("prefer") or "")
             return route.fulfill(status=201, headers=hdr, body="")
         if "/storage/v1/object/site-media/" in url and method == "POST":
             path = url.split("/storage/v1/object/site-media/")[1].split("?")[0]
@@ -148,6 +150,8 @@ with sync_playwright() as p:
     check("log record carries room, trade, note and project",
           log.get("room") == "Living" and log.get("trade") == "Carpentry"
           and log.get("note") == "Framing done, boards start tomorrow" and log.get("project_id") == "p1")
+    check("uploads never overwrite a stored log or photo (ignore duplicates)",
+          bool(server.prefers) and all("resolution=ignore-duplicates" in x for x in server.prefers), str(server.prefers[:2]))
     check("log record points at the voice file", bool(voice_files) and log.get("audio_path") == voice_files[0][0])
     check("photo record points at the uploaded photo",
           len(server.photos) == 1 and bool(photo_files) and server.photos[0]["path"] == photo_files[0][0]

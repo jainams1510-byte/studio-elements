@@ -18,12 +18,13 @@ export const remote: Remote = {
       .upload(path, blob, { contentType: mime, upsert: true })
     if (error) throw new Error(error.message)
   },
+  // A retried upload never overwrites what is already stored (an owner may have edited it).
   async upsertLog(row) {
-    const { error } = await supabase.from('site_logs').upsert(row, { onConflict: 'id' })
+    const { error } = await supabase.from('site_logs').upsert(row, { onConflict: 'id', ignoreDuplicates: true })
     if (error) throw new Error(error.message)
   },
   async upsertPhotos(rows) {
-    const { error } = await supabase.from('site_log_photos').upsert(rows, { onConflict: 'id' })
+    const { error } = await supabase.from('site_log_photos').upsert(rows, { onConflict: 'id', ignoreDuplicates: true })
     if (error) throw new Error(error.message)
   },
   async requestTranscript(logId) {
