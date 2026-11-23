@@ -1,6 +1,6 @@
 # Studio Elements project tool: handover
 
-Everything needed to continue building this project in a new chat. Written 23 Nov 2026, after the AI layer and owner log editing went live (latest commit `4b6486c`).
+Everything needed to continue building this project in a new chat. Written 23 Nov 2026; updated the same day after Schedule part 1 and the backup download went live.
 
 ---
 
@@ -11,7 +11,7 @@ You are continuing a build that is already live and in use. Before changing anyt
 1. **Get the code.** It is in the GitHub repository `jainams1510-byte/studio-elements`, branch `main`. Attach it to the session and clone it. Every push to `main` deploys automatically to Cloudflare Pages.
 2. **Connect the services.** The Supabase project is `obwkpheueqecifmeaqyc` (Mumbai). Use the Supabase connector for SQL, migrations, edge functions and security advisors.
 3. **Read sections 2, 6 and 9 before writing code.** Section 2 covers the rules Jainam set. Section 6 covers how the database is protected. Section 9 lists traps already hit.
-4. **Next job:** see section 11, "What to build next". The next module is **Schedule** (tasks, critical path, calendar, timeline), then **Money**. Several smaller items are also pending; see 11.1.
+4. **Next job:** see section 11, "What to build next". **Schedule part 2** (calendar view, procurement order-by dates, drafted notes), then **Money**. Several smaller items are also pending; see 11.1.
 5. **Work the way Jainam asked:**
    - Plan briefly, then build.
    - Test for real before saying anything works.
@@ -81,9 +81,10 @@ The companion file `Studio PM tool build routes.md` is the sourced research repo
 | Owner edit / remove / restore of site logs and photos | **Live 23 Nov** (`b0cb21e`). 15 rule checks passed on the live database. Browser-tested with a stand-in. **Not yet tried on a phone.** |
 | Decisions and variations | Not started |
 | Procurement (order-by dates) | Not started |
-| Schedule (tasks, critical path, calendar, timeline) | Not started (**next**) |
+| Schedule part 1: tasks, After links, templates, critical path, baseline + change log, phone tab, desktop timeline, Today risks | **Live 23 Nov.** 23 live rule checks passed; 50 unit tests; browser test 33/33 with a stand-in. **Not yet tried on a phone or with real tasks.** Template durations are placeholders. |
+| Schedule part 2: calendar view, procurement, automations' drafted messages | Not started (**next**) |
 | Money (budget, RA bills, fee invoices) | Not started |
-| Hardening (weekly export backup, restore drill, access test suite) | Not started. **The free tier has no backups, so this is urgent.** |
+| Hardening | **Backup download live 23 Nov** (owner-only ZIP: all tables + media; backup log; "Backup due" on Today after 7 days). Restore drill and access test suite not started. **Make the first backup now.** |
 
 The original "one week" sprint (14–20 Nov) slipped. Rule: each module ends with a phone check. If it fails, dates shift and nothing is skipped. "Complete" means two weeks of real logs with no lost entry.
 
@@ -153,8 +154,9 @@ Migrations applied, in order:
 4. `drawing_register` (22 Nov)
 5. `ai_layer` (22 Nov)
 6. `log_edit_remove` (23 Nov)
+7. `schedule_backup_log` (23 Nov)
 
-Repository files `supabase/001` to `004` match the live database.
+Repository files `supabase/001` to `005` match the live database. `supabase/tests/005_schedule_rules.sql` is the live rule check for part 5 (always rolls back).
 
 ### Tables
 | Table | Key columns |
@@ -169,6 +171,10 @@ Repository files `supabase/001` to `004` match the live database.
 | site_log_ai | log_id PK, status pending/done/failed, language, transcript, summary, final_summary, suggested_room/trade, model, error |
 | site_log_reviews | log_id, reviewer_id, decision confirm/reject, unique (log_id, reviewer_id) |
 | weekly_reports | project_id, week_start (Monday), kind client/internal, language, body, status draft/approved, approved_by/at, model; unique (project, week, kind) |
+| project_schedules | project_id PK, start_date, work_days smallint[] (ISO 1=Mon…7=Sun, default Mon–Sat), holidays date[], baseline_at/by, baseline_plan jsonb, change_reason (write-only) |
+| tasks | id (made by the app), project_id, stage, name, trade, room, owner_name, duration (working days), milestone, after_ids uuid[] (finish-to-start), status planned/in_progress/done/blocked, actual_start/end, gate_drawing_id, baseline_start/end, sort_order, template_key, change_reason (write-only), removed_at/by |
+| schedule_changes | project_id, task_id (not an FK), kind added/changed/removed/restored/baseline/rebaseline/calendar, before, after, reason, decision_id (for later), changed_by/at. Read-only to the app |
+| backup_log | made_at, made_by, summary, files, missing. Insert by owners only (summary, files, missing columns) |
 
 Stages: 1 Concept, 2 Design development, 3 Working drawings, 4 BOQ and tendering, 5 Procurement, 6 Execution, 7 Snagging, 8 Handover.
 
@@ -183,6 +189,7 @@ Drawing disciplines: Furniture layout, Electrical, Ceiling (RCP), HVAC, Plumbing
   - `report_edited`: an edit to an approved report sets it back to draft; approving stamps approved_by and approved_at.
   - site_log_ai: the app may update only final_summary, and only while status = done.
   - Reviews: insert (log_id, decision), update (decision) on your own row only.
+- Schedule (part 5): `task_guard` keeps baselines owner-only, makes removal/restore owner-only (error, not silent), fills actual dates from status on the Ahmedabad calendar, and once the baseline is frozen refuses any duration, link, add or remove without `change_reason`, logging it. `task_links_check` (after trigger, so multi-row inserts work) refuses links to missing or other-project tasks, gate sheets from other projects, and loops. `schedule_guard`: only owners freeze or re-baseline; cannot unfreeze; re-baseline and calendar changes after the freeze need a reason. `schedule_copy_baseline` copies `baseline_plan` into tasks in the same statement.
 - profiles: people can update only their own `full_name`. **Roles change only in the Supabase dashboard** (fixed 23 Nov; before that, anyone could make themselves owner).
 - `edited_by` / `removed_by` are deliberately **not** foreign keys to profiles. A second link from site_logs to profiles makes the existing `profiles(full_name)` embeds ambiguous (PostgREST error), which would break the live app.
 
@@ -201,6 +208,10 @@ A summary is verified when two different people confirm it and at least one is `
 | `team.ts` | `useTeam()`: me (role) and everyone's names, cached; `isOwner`. |
 | `drawings.ts` | Revision rules: rank, current revision, next codes, site status (none/current/outdated/preliminary), flags. |
 | `review.ts` | Verification state, `stillNeeded`, `weekStart` (Monday), `addDays`, `reportDue` (Friday from 17:00, plus Saturday and Sunday). |
+| `schedule.ts` | `WorkCalendar` (working-day numbers both ways, holidays) and `computeSchedule` (forward/backward pass with progress and today, float, slip, critical path, loop detection), `baselinePlan`, `makesLoop`, `statusLabel`. |
+| `templates.ts` | Stage templates (8 stages, exit-gate milestones, placeholder durations) and `templateRows(project, fromStage)`. |
+| `useSchedule.ts` | Loads and caches a schedule; `gateFlag` (sheet not at R within 7 days or started); `projectRisk` for Today (milestone > 7 working days late, overdue, gates, blocked, loops). |
+| `backup.ts` | Backup ZIP (`data.json` of all 14 tables + `media/`), backup log, file save (share sheet on iPhone home-screen app). |
 | `ai.ts` | Loads voice logs with AI rows; review insert-then-update; edit summary. |
 | `media.ts` | Photo compression, audio recording. |
 | `db.ts` | IndexedDB (idb): outbox and cache. |
@@ -220,7 +231,7 @@ Stack versions: React 19, Vite 8, TypeScript 7, vite-plugin-pwa 2, supabase-js 2
 
 ## 8. How to test and deploy
 
-- `npm test`: 29 unit tests (queue, transcript requests, drawing rules, review rules).
+- `npm test`: 50 unit tests (queue, transcript requests, drawing rules, review rules, calendar and critical path, templates, risks, backup).
 - Browser tests: run `npm run build`, then `npx vite preview --port 4173 --strictPort`, then `python3 e2e/<name>.py`. They need Playwright, Pillow and Chrome at `/usr/bin/google-chrome`. Each uses a stand-in Supabase in memory and never touches real data.
 
   | Test | Checks | Covers |
@@ -229,9 +240,10 @@ Stack versions: React 19, Vite 8, TypeScript 7, vite-plugin-pwa 2, supabase-js 2
   | `register.py` | 13 | Projects and drawing register |
   | `ai.py` | 13–14 | Review and reports; the report-due check runs only on weekends and Friday evening |
   | `logs.py` | 10 | Owner edit, remove, restore |
+  | `schedule.py` | 33 | Schedule setup, critical path vs an independent count, edits, loops, freeze, reasons, flags, timeline, coordinator limits, backup ZIP |
 - **Live database rule tests:** run as a `DO` block that impersonates a user and ends in `raise exception 'RESULTS: …'`, so everything rolls back.
   - Set `request.jwt.claims` with `set_config(..., true)` and `execute 'set local role authenticated'`.
-  - Results so far: 11 core, 12 register, 15 AI layer and 15 log-edit checks, all passed.
+  - Results so far: 11 core, 12 register, 15 AI layer, 15 log-edit and 23 schedule checks, all passed.
   - Creating test users in `auth.users` from Claude is **blocked by the permission system**; use Jainam's real two user ids inside rolled-back transactions.
 - Edge function check: `npx -y deno check --no-lock index.ts`.
 - **Deploy order matters:** database migration first, then the edge function, then push the app. New app code that reads new columns breaks if pushed before the migration.
@@ -273,7 +285,7 @@ Stack versions: React 19, Vite 8, TypeScript 7, vite-plugin-pwa 2, supabase-js 2
    - Draft a Gujarati or Hindi report.
    - Edit, remove and restore a log.
    - Check the studio account sees no Edit option.
-2. **Weekly export backup** of all tables (and a file list) to the shared drive, plus a restore drill. The free tier keeps no backups. Approach to be decided, e.g. a scheduled export Jainam downloads, or an in-app "Export everything" button producing JSON/CSV.
+2. **Backup:** download is built (Projects page, owners). Still to do: a **restore drill** (load a backup ZIP into a fresh database and compare counts) and a script to check a ZIP.
 3. **Verification decision:** keep Jainam + the studio account, or the studio account alone with a "checked with team member" tick.
 4. **Display names** for the two accounts (`profiles.full_name`).
 5. **Add Aggrawal Atelier** with its rooms, trades and sheets.
@@ -290,7 +302,10 @@ Stack versions: React 19, Vite 8, TypeScript 7, vite-plugin-pwa 2, supabase-js 2
 - **AI:** draft decisions from voice notes. They stay unverified until confirmed, like summaries.
 - **WhatsApp:** each confirmed decision gets a drafted confirmation message for the project group (Jainam sends it).
 
-### 11.3 Schedule (next module, full version)
+### 11.3 Schedule (part 1 live 23 Nov; part 2 next)
+
+**Live:** task fields, After links, stage templates, critical path, baseline and reasons, change log, sheet gate (R0), phone tab with critical strip, desktop timeline, Today risks. **Part 2 still to build:** procurement items and order-by dates (and the "needs material on site" gate), the calendar views, drafted messages for automations (late milestone client note, order-by reminder), decision link on a change reason, and auto-prompting the freeze when work orders exist (Money module). Working days default Mon–Sat with a per-project holiday list.
+
 - **Task fields:**
   - stage, task, trade, room, owner, duration, "After" (finish-to-start predecessors), planned start and end (**calculated, never typed**), baseline end, status, milestone flag.
   - Status: planned → in progress → done; blocked; slipped (derived).
@@ -405,6 +420,7 @@ Stack versions: React 19, Vite 8, TypeScript 7, vite-plugin-pwa 2, supabase-js 2
 ## 14. Commit history
 
 ```
+(next) Schedule part 1 and owner backup download
 4b6486c README: log editing and removal
 b0cb21e Owners can edit, remove and restore site logs and remove single photos
 cf36bb9 AI layer: voice-note transcripts, two-person review queue, weekly report drafts
