@@ -1,1 +1,58 @@
-/* Styles for the fees module. Keep to the design tokens in styles.css. */
+/* Styles for the fees module (Fees tab, Finances, Vendors). Keep to the design tokens in styles.css. */
+
+.fees-owner-only { color: var(--muted); }
+
+/* KPI tiles: two per row on a phone so rupee figures never squeeze. */
+.fees-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (min-width: 480px) { .fees-tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.fees-tile b { font-size: 20px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fees-tile.danger b { color: var(--danger); }
+.fees-tile.ok b { color: var(--accent); }
+
+.fees-ok { color: var(--accent); font-weight: 500; }
+.fees-basis { overflow-wrap: anywhere; }
+
+/* Proposal stages and milestones: label above, three small columns below. */
+.fees-stages { display: flex; flex-direction: column; gap: 14px; }
+.fees-stage { display: flex; flex-direction: column; gap: 6px; padding-bottom: 12px; border-bottom: 1px solid var(--line-soft); }
+.fees-stage:last-child { border-bottom: 0; padding-bottom: 0; }
+.fees-stage-name { font-weight: 500; }
+.fees-stage-grid { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr) minmax(0, 1fr); gap: 8px; align-items: end; }
+.fees-mile { display: flex; flex-direction: column; gap: 6px; padding: 10px 0; border-bottom: 1px solid var(--line-soft); }
+.fees-mile-grid { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr) auto; gap: 8px; align-items: end; }
+.fees-amount { display: flex; flex-direction: column; justify-content: flex-end; min-height: 48px; gap: 2px; min-width: 0; }
+.fees-amount b { font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fees-total-line { padding-top: 10px; border-top: 1px solid var(--line); font-size: 15px; }
+.fees-total-line b { white-space: nowrap; }
+.fees-payable b { font-weight: 600; }
+
+/* Invoice and cost cards */
+.fees-invoice .card-head { align-items: flex-start; }
+.fees-actions { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 4px; }
+.fees-actions .pill { flex: none; }
+.fees-form { padding-top: 6px; }
+.fees-cost { gap: 6px; }
+.fees-link { display: inline-flex; align-items: center; color: var(--accent); text-decoration: none; border-color: var(--accent); }
+
+.fees-margin .two > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.fees-big { font-size: 20px; font-weight: 600; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Finances */
+.fees-mbar { display: flex; flex-direction: column; gap: 6px; padding: 8px 0; }
+.pbar.fees-low i { background: var(--danger); }
+.fees-opening { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: end; }
+.fees-opening .secondary { width: auto; padding: 0 18px; min-height: 48px; }
+.fees-chart { display: block; width: 100%; height: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.fees-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.fees-table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+.fees-table th { text-align: right; font-weight: 500; color: var(--muted); padding: 6px 4px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.fees-table td { text-align: right; padding: 8px 4px; border-bottom: 1px solid var(--line-soft); white-space: nowrap; }
+.fees-table th:first-child, .fees-table td:first-child { text-align: left; }
+.fees-table tr.neg td:last-child { color: var(--danger); font-weight: 600; }
+
+/* Vendors */
+.fees-vendor-detail { padding: 0 0 14px; }
+.fees-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 12px; margin: 0; }
+.fees-stats div { min-width: 0; }
+.fees-stats dt { font-size: 12px; color: var(--muted); }
+.fees-stats dd { margin: 0; font-size: 15px; font-weight: 600; overflow-wrap: anywhere; }
