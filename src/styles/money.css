@@ -1,1 +1,94 @@
 /* Styles for the money module. Keep to the design tokens in styles.css. */
+
+.m-money { min-width: 0; }
+.m-sections { gap: 6px; }
+.m-sections .chip { padding: 0 12px; }
+
+/* Totals card */
+.m-totals { gap: 14px; }
+.m-hero { display: flex; flex-direction: column; gap: 4px; padding-bottom: 12px; border-bottom: 1px solid var(--line-soft); }
+.m-hero strong { font-size: 30px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.1; }
+.m-var { font-size: 14px; font-weight: 500; color: var(--accent); }
+.m-var.over { color: var(--danger); }
+.m-figs { display: flex; flex-direction: column; }
+.m-fig { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 34px; padding: 4px 0; font-size: 14px; }
+.m-fig + .m-fig { border-top: 1px solid var(--line-soft); }
+.m-fig-label { display: flex; align-items: center; gap: 8px; min-width: 0; color: var(--muted); overflow-wrap: anywhere; }
+.m-fig-value { flex: none; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.m-fig.strong .m-fig-label, .m-fig.strong .m-fig-value { color: var(--ink); font-weight: 600; }
+.m-pct { display: inline-flex; align-items: center; gap: 2px; color: var(--ink); }
+.m-pct input { width: 68px; min-height: 40px; padding: 0 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); font-size: 16px; text-align: right; }
+
+.m-details { border-top: 1px solid var(--line-soft); }
+.m-details > summary { min-height: 44px; font-size: 14px; font-weight: 500; color: var(--accent); }
+.m-pad { padding: 4px 0 6px; }
+.field input:disabled, .field select:disabled, .m-pct input:disabled { background: var(--tint); }
+
+/* BOQ lines */
+.m-cat { padding-top: 6px; }
+.m-cat h2 { margin: 0; color: var(--ink); font-weight: 600; font-size: 14px; }
+.m-amt { font-weight: 600; font-variant-numeric: tabular-nums; }
+.m-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
+.m-ledger { display: flex; flex-wrap: wrap; gap: 2px 12px; padding: 6px 8px; border-radius: 4px; background: var(--tint); font-variant-numeric: tabular-nums; }
+.m-overrun { display: flex; align-items: flex-start; color: var(--danger); }
+.m-overrun .dot { margin-top: 6px; }
+.m-dot-risk { background: var(--danger); }
+.m-over { color: var(--danger); font-weight: 500; }
+.m-editor { margin: 10px 0; }
+
+/* Ledger table: scrolls sideways inside its own box on a phone */
+.m-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.m-table { width: 100%; min-width: 520px; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+.m-table th, .m-table td { padding: 8px 10px; border-bottom: 1px solid var(--line-soft); text-align: right; white-space: nowrap; }
+.m-table thead th { font-weight: 500; color: var(--muted); }
+.m-table th:first-child { text-align: left; white-space: normal; min-width: 150px; font-weight: 500; }
+.m-table tbody tr:last-child th, .m-table tbody tr:last-child td { border-bottom: 0; }
+.m-total-row th, .m-total-row td { font-weight: 600; background: #f0ede6; }
+
+.button-row.m-three > * { min-width: 0; padding: 0 6px; font-size: 15px; }
+.m-ticks { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 10px; padding-bottom: 6px; }
+.m-ticks .check { align-items: flex-start; padding-top: 10px; min-height: 44px; }
+.m-ticks .check input { flex: none; margin: 0; }
+
+/* Quotes and work orders */
+.m-quote.lowest { box-shadow: inset 3px 0 0 var(--accent); padding-left: 10px; }
+.m-mini { gap: 6px; }
+.m-mini .chip { min-height: 44px; padding: 0 10px; font-size: 13px; }
+.chip.m-done { border-color: var(--accent); color: var(--accent); }
+.m-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.m-sub { padding: 12px; border: 1px solid var(--line-soft); border-radius: 6px; background: var(--ground); }
+.m-inset { margin: 0 0 12px; background: var(--ground); }
+.m-pick { padding: 4px 0; }
+.m-pick .check { align-items: flex-start; padding-top: 10px; }
+.m-pick .check input { flex: none; margin: 0; }
+.m-pick-rate { display: flex; flex-direction: column; gap: 6px; padding: 0 0 10px 30px; }
+.m-pick-rate .field input { max-width: 200px; }
+.m-pick-amt { color: var(--muted); }
+.m-inset .button-row > .primary, .m-bill-body .button-row > .primary { flex: 2; }
+
+/* Bills */
+.m-bill { gap: 0; }
+.m-bill-head { padding: 0; }
+.m-bill-body { padding-top: 14px; margin-top: 12px; border-top: 1px solid var(--line-soft); }
+.m-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; }
+.m-steps li { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; font-size: 11px; line-height: 1.2; color: var(--muted); }
+.m-steps li i { width: 14px; height: 14px; border: 2px solid var(--line); border-radius: 50%; background: var(--surface); }
+.m-steps li::before { content: ''; position: absolute; top: 6px; right: calc(50% + 9px); width: calc(100% - 14px); height: 2px; background: var(--line); }
+.m-steps li:first-child::before { display: none; }
+.m-steps li.done i, .m-steps li.now i { border-color: var(--accent); background: var(--accent); }
+.m-steps li.done::before, .m-steps li.now::before { background: var(--accent); }
+.m-steps li.now span { color: var(--ink); font-weight: 600; }
+.m-steps small { font-size: 10px; color: var(--muted); }
+.m-bline { display: flex; flex-direction: column; gap: 8px; padding: 10px 0; }
+.m-bline-amts { display: flex; flex-wrap: wrap; gap: 2px 14px; font-variant-numeric: tabular-nums; }
+.m-cert { align-items: end; }
+.m-cert-actions { display: flex; flex-wrap: wrap; gap: 6px; padding-bottom: 2px; }
+
+/* Variations */
+.m-flag-col { flex-direction: column; align-items: stretch; gap: 8px; }
+.m-flag-col .pill { align-self: flex-start; }
+
+/* Client report */
+.m-report h2 { margin: 6px 0 0; color: var(--ink); font-weight: 600; }
+.m-rline { align-items: flex-start; }
+.m-ledger > span, .m-bline-amts > span { white-space: nowrap; }
