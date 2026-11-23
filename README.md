@@ -37,7 +37,20 @@ share yourself, team workload and a latest-activity feed.
 | `e2e/register.py` | Browser test of project editing and the drawing register, mocked server |
 | `e2e/ai.py` | Browser test of the review queue and weekly reports, mocked server and AI |
 | `e2e/logs.py` | Browser test of owners editing, removing and restoring logs, mocked server |
+| `scripts/restore_check.py` | Checks a backup (every table, links, files) and writes a one-step restore SQL |
+| `scripts/drill/run_drill.sh` | Restore drill: build a database from the setup files, fill it, back up, restore, compare |
 | `.env` | Supabase address and public key (public by design) |
+
+## Restoring a backup
+
+1. Check it: `python3 scripts/restore_check.py backup.zip --sql restore.sql` (a bare `data.json` also works).
+   It lists every table's rows, broken links and missing photos, and refuses to write the SQL if anything is wrong.
+2. In a fresh Supabase project, run the setup files `supabase/001` to `006` in order.
+3. Invite the same people. Their sign-in ids must match the backup, or the restore stops.
+4. Load `restore.sql` in the SQL editor. It runs as one step: if anything fails, nothing changes.
+5. Upload the ZIP's `media/` folder to the `site-media` bucket, keeping the paths.
+
+`bash scripts/drill/run_drill.sh` rehearses steps 1, 2 and 4 on a scratch database (needs PostgreSQL 16).
 
 ## One-time setup
 
