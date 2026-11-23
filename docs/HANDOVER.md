@@ -93,15 +93,13 @@ The original "one week" sprint (14–20 Nov) slipped. Rule: each module ends wit
 
 ## 4. What is live, screen by screen
 
-Hash routes: `#/` Today, `#/log`, `#/projects`, `#/project/:id` (tabs: Site logs, Drawings, Schedule, Reports), `#/project/:id/drawings`, `#/project/:id/schedule`, `#/project/:id/reports`, `#/project/:id/timeline` (desktop, full width), `#/project/:id/edit`, `#/drawing/:id`, `#/review`. Tab bar: **Today · Review · + · Projects**.
+Hash routes: `#/` Today, `#/log`, `#/projects`, `#/project/:id` (tabs: Site logs, Drawings, Schedule, Reports), `#/project/:id/drawings`, `#/project/:id/schedule`, `#/project/:id/reports`, `#/project/:id/timeline` (full width), `#/project/:id/edit`, `#/drawing/:id`, `#/review`, `#/drafts`, `#/team`. Tab bar: **Today · Review · + · Projects**.
 
 - **Sign in:** email and password. Accounts are created by hand in Supabase (Authentication > Users > auto-confirm). New sign-ups should be switched off.
 - **Today:**
   - Briefing (counts by status, biggest concern) and three tiles: drafts to send, overdue tasks, voice notes to review.
   - Forecast handover chart across projects; project cards (status, progress bar with plan tick, days to handover, overdue, reasons); latest activity (logs, revisions, issues, schedule changes).
   - "Needs you": drafts ready, schedule at risk (per project), backup due (owners, after 7 days), drawing flags (site holds an outdated or P print), voice notes to review, and a weekly report due (from Friday 5 pm until this week's client report is approved).
-  - Projects with an 8-stage bar.
-  - Latest 10 logs, with photo count and voice note marker.
   - Unsent-upload count and a stuck-upload message.
 - **New log (`+`):**
   - Project, photos (compressed on the phone), hold-to-record voice note, room and trade chips, one optional line.
@@ -117,7 +115,7 @@ Hash routes: `#/` Today, `#/log`, `#/projects`, `#/project/:id` (tabs: Site logs
     - Owners get **Edit or remove**: edit note, room or trade; remove single photos; remove the log; a removed list with Restore.
   - **Drawings tab:** register sorted by discipline, current revision, site status, offline cache.
   - **Schedule tab:** setup (start date, working days, template from a stage); forecast finish vs baseline with slip; critical-path strip; flags (sheet gate, overdue, blocked, milestone > 7 working days late); tasks by stage with Start/Done/Reached buttons; task editor (After links, loops not offered, trade, room, owner, sheet gate, status and actual dates; reason box once frozen; owner Remove); baseline card (owner Freeze / Re-baseline); calendar settings; change log; removed tasks with Restore. Read-only offline from the phone's copy.
-- **Timeline (desktop):** bars (critical green, other grey, done light), spare days as an outline, baseline line, milestone diamonds, Sunday/holiday shading, Today line, zoom Months/Weeks/Days, select a task for arrows and details, edit beside the chart on screens 900 px and wider.
+  - **Timeline (`#/project/:id/timeline`):** bars (critical green, other grey, done light), spare days as an outline, baseline line, milestone diamonds, Sunday/holiday shading, Today line, zoom Months/Weeks/Days, select a task for arrows and details. Laptop: edit beside the chart (900 px and wider). Phone: 128 px name column, chart swipes sideways, opens at today in Months zoom, "Edit in the Schedule tab".
   - **Reports tab:**
     - This week or last week; client language (English, Hindi, Gujarati).
     - Draft reports, edit, Approve, Share (phone share sheet or copy).
@@ -224,7 +222,7 @@ A summary is verified when two different people confirm it and at least one is `
 | `ai.ts` | Loads voice logs with AI rows; review insert-then-update; edit summary. |
 | `media.ts` | Photo compression, audio recording. |
 | `db.ts` | IndexedDB (idb): outbox and cache. |
-| `screens/*` | Today, NewLog, Projects, BackupCard, ProjectPage, LogList, DrawingList, DrawingDetail, EditProject, ScheduleTab, TaskEditor, Timeline, Review, Reports, SignIn. |
+| `screens/*` | Today, Drafts, Team, PortfolioParts (status tag, progress bar, project card, handover chart), NewLog, Projects, BackupCard, ProjectPage, LogList, DrawingList, DrawingDetail, EditProject, ScheduleTab, TaskEditor, Timeline, Review, Reports, SignIn. |
 | `supabase/functions/ai/index.ts` | `health`, `transcribe {log_id, force?}`, `weekly_report {project_id, week_start, language}` (details below). |
 
 Edge function notes:
@@ -436,7 +434,7 @@ Finances (receivables, payables, margin by project, cash-flow forecast), vendor 
 ## 14. Commit history
 
 ```
-(next) Phone layout fixes and studio overview
+67358d6 Phone layout fixes and studio overview
 e83b5c0 Handover: routes, screens and backup notes
 daa8ebf Handover: schedule part 1 and backup are live
 98254c2 Schedule part 1 and owner backup download
