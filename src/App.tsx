@@ -7,6 +7,7 @@ import EditProject from './screens/EditProject'
 import ProjectPage from './screens/ProjectPage'
 import Projects from './screens/Projects'
 import Review from './screens/Review'
+import Timeline from './screens/Timeline'
 import SignIn from './screens/SignIn'
 import Today from './screens/Today'
 import { supabase } from './supabase'
@@ -47,20 +48,25 @@ export default function App() {
     )
   }
 
-  // Routes: /log, /projects, /project/:id, /project/:id/drawings, /project/:id/edit, /drawing/:id
+  // Routes: /log, /projects, /project/:id(/drawings|/schedule|/reports|/timeline|/edit), /drawing/:id, /review
   const [section, id, sub] = route.split('/').filter(Boolean)
   let screen
   if (section === 'log') screen = <NewLog outbox={outbox} />
   else if (section === 'projects') screen = <Projects />
   else if (section === 'project' && id && sub === 'edit') screen = <EditProject key={id} projectId={id} />
-  else if (section === 'project' && id) screen = <ProjectPage key={id} projectId={id} tab={sub === 'drawings' ? 'drawings' : sub === 'reports' ? 'reports' : 'logs'} />
+  else if (section === 'project' && id && sub === 'timeline') screen = <Timeline key={id} projectId={id} />
+  else if (section === 'project' && id) {
+    const tab = sub === 'drawings' || sub === 'reports' || sub === 'schedule' ? sub : 'logs'
+    screen = <ProjectPage key={id} projectId={id} tab={tab} />
+  }
   else if (section === 'drawing' && id) screen = <DrawingDetail key={id} drawingId={id} />
   else if (section === 'review') screen = <Review />
   else screen = <Today outbox={outbox} online={online} />
 
   const onLog = section === 'log'
+  const wide = section === 'project' && sub === 'timeline'
   return (
-    <div className="app">
+    <div className={wide ? 'app wide' : 'app'}>
       {screen}
       {!onLog && (
         <nav className="tabbar" aria-label="Main">

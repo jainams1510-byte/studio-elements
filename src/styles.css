@@ -146,3 +146,54 @@ textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--line); borde
 .tile.removing .tile-action { background: var(--accent); }
 .confirm { padding: 12px; border: 1px solid var(--line); border-radius: 6px; }
 .card.removed { opacity: 0.75; }
+
+/* Schedule */
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.check { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 14px; }
+.check input { width: 20px; height: 20px; accent-color: var(--accent); }
+.summary-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.summary-row > div { display: flex; flex-direction: column; gap: 2px; }
+.big-date { font-size: 22px; font-weight: 600; letter-spacing: -0.01em; }
+.big-date.muted { font-size: 16px; font-weight: 500; }
+.late, .slip { color: var(--danger); }
+.slip { font-size: 15px; }
+.crit-strip { list-style: none; margin: 0; padding: 0 0 4px; display: flex; gap: 8px; overflow-x: auto; scroll-snap-type: x proximity; }
+.crit-strip li { flex: none; scroll-snap-align: start; }
+.crit-strip button { min-height: 52px; max-width: 200px; padding: 6px 12px; border: 1px solid var(--accent); border-left-width: 4px; border-radius: 6px; background: var(--surface); text-align: left; display: flex; flex-direction: column; gap: 2px; }
+.crit-strip li.ms button { border-left-color: var(--ink); }
+.crit-strip button span:first-child { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.task-row { display: flex; align-items: center; gap: 10px; }
+.task-row .row { flex: 1; min-width: 0; }
+.task.crit .task-row { box-shadow: inset 3px 0 0 var(--accent); padding-left: 10px; }
+.task .editor { margin: 10px 0; }
+.diamond { display: inline-block; width: 9px; height: 9px; margin-right: 8px; background: var(--ink); transform: rotate(45deg); vertical-align: 1px; }
+.task.crit .diamond { background: var(--accent); }
+
+/* Timeline (desktop) */
+.app.wide { max-width: none; }
+.timeline-screen { padding-bottom: 96px; }
+.timeline-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; }
+.zoom { display: flex; gap: 6px; margin-left: auto; }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.lg { display: inline-block; width: 18px; height: 9px; border-radius: 2px; }
+.lg.crit { background: var(--accent); }
+.lg.norm { background: var(--muted); }
+.lg.float { border: 1px solid var(--muted); }
+.lg.base { height: 2px; background: var(--ink); }
+.lg.ms { width: 9px; height: 9px; background: var(--ink); transform: rotate(45deg); border-radius: 0; }
+.timeline-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
+.timeline-layout.with-panel { grid-template-columns: minmax(0, 1fr) 380px; }
+.gantt { display: flex; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); overflow: hidden; }
+.gantt-names { position: relative; flex: none; border-right: 1px solid var(--line); }
+.gantt-head { display: flex; justify-content: space-between; align-items: flex-end; padding: 0 12px 6px; font-size: 12px; font-weight: 500; color: var(--muted); border-bottom: 1px solid var(--line); }
+.gantt-stage { position: absolute; left: 0; right: 0; padding: 0 12px; display: flex; align-items: center; font-size: 12px; font-weight: 600; color: var(--muted); background: #f0ede6; }
+.gantt-name { position: absolute; left: 0; right: 0; padding: 0 12px 0 16px; border: 0; background: transparent; display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 13px; text-align: left; }
+.gantt-name .nm { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gantt-name .af { flex: none; color: var(--muted); font-size: 12px; }
+.gantt-name.crit { box-shadow: inset 3px 0 0 var(--accent); }
+.gantt-name.on { background: #e3ebe6; font-weight: 600; }
+.gantt-chart { overflow-x: auto; flex: 1; }
+.gantt-chart svg { display: block; font-family: inherit; }
+.timeline-detail { max-width: 520px; }
+.timeline-panel .editor { margin: 0; }

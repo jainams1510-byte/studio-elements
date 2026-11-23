@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { go, PROJECT_SELECT, useProjects } from '../hooks'
 import { supabase } from '../supabase'
+import { isOwner, useTeam } from '../team'
 import { STAGES, type Project } from '../types'
+import BackupCard from './BackupCard'
 
 function parseList(text: string): string[] {
   return [...new Set(text.split(',').map((s) => s.trim()).filter(Boolean))]
@@ -9,6 +11,7 @@ function parseList(text: string): string[] {
 
 export default function Projects() {
   const { projects, reload, error } = useProjects()
+  const { me } = useTeam()
   const [name, setName] = useState('')
   const [stage, setStage] = useState(1)
   const [rooms, setRooms] = useState('')
@@ -130,6 +133,8 @@ export default function Projects() {
           </ul>
         </section>
       )}
+
+      {isOwner(me) && <BackupCard />}
     </main>
   )
 }

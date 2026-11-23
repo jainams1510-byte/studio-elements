@@ -1,11 +1,15 @@
 import { useEffect, useState } from 'react'
-import { DRAWING_SELECT, needsAttention, siteStatus, siteStatusText, type Drawing } from '../drawings'
+import { BACKUP_EVERY_DAYS, lastBackup } from '../backup'
+import { DRAWING_SELECT, needsAttention, siteStatus, siteStatusText, todayLocal, type Drawing } from '../drawings'
 import { loadVoiceLogs, stateOf } from '../ai'
 import { go, useOutboxTick, useProjects } from '../hooks'
 import { reportDue, weekStart } from '../review'
 import { listOutbox, syncOutbox } from '../queue'
 import { remote, supabase } from '../supabase'
+import { SCHEDULE_SELECT, TASK_SELECT, type ScheduleSettings, type Task } from '../schedule'
+import { isOwner, useTeam } from '../team'
 import { STAGES } from '../types'
+import { projectRisk, riskText } from '../useSchedule'
 
 type RecentLog = {
   id: string
@@ -31,6 +35,36 @@ export default function Today({ outbox, online }: { outbox: number; online: bool
   const [drawings, setDrawings] = useState<Drawing[]>([])
   const [toReview, setToReview] = useState(0)
   const [approvedThisWeek, setApprovedThisWeek] = useState<Set<string> | null>(null)
+  const [schedules, setSchedules] = useState<{ settings: ScheduleSettings[]; tasks: Task[] } | null>(null)
+  const [backupAge, setBackupAge] = useState<number | null | undefined>(undefined)
+  const { me } = useTeam()
+  const owner = isOwner(me)
+
+  useEffect(() => {
+    let live = true
+    Promise.all([supabase.from('project_schedules').select(SCHEDULE_SELECT), supabase.from('tasks').select(TASK_SELECT).is('removed_at', null)]).then(
+      ([s, t]) => {
+        if (live && !s.error && !t.error) setSchedules({ settings: (s.data ?? []) as ScheduleSettings[], tasks: (t.data ?? []) as unknown as Task[] })
+      },
+    )
+    return () => {
+      live = false
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!owner) return
+    let live = true
+    lastBackup().then(
+      (last) => {
+        if (live) setBackupAge(last ? Math.floor((Date.now() - Date.parse(last.made_at)) / 86_400_000) : null)
+      },
+      () => undefined,
+    )
+    return () => {
+      live = false
+    }
+  }, [owner])
 
   useEffect(() => {
     let live = true
@@ -110,7 +144,19 @@ export default function Today({ outbox, online }: { outbox: number; online: bool
     .map((d) => ({ d, status: siteStatus(d) }))
     .filter(({ status }) => needsAttention(status))
   const reportsDue = approvedThisWeek ? projects.filter((p) => !approvedThisWeek.has(p.id)) : []
-  const anyFlags = flags.length > 0 || toReview > 0 || reportsDue.length > 0
+  const today = todayLocal()
+  const risks = schedules
+    ? projects
+        .map((p) => {
+          const settings = schedules.settings.find((x) => x.project_id === p.id)
+          if (!settings) return null
+          const risk = projectRisk(settings, schedules.tasks.filter((t) => t.project_id === p.id), drawings.filter((d) => d.project_id === p.id), today)
+          return risk ? { project: p, risk } : null
+        })
+        .filter((x) => x !== null)
+    : []
+  const backupDue = owner && online && backupAge !== undefined && (backupAge === null || backupAge >= BACKUP_EVERY_DAYS)
+  const anyFlags = flags.length > 0 || toReview > 0 || reportsDue.length > 0 || risks.length > 0 || backupDue
 
   return (
     <main className="screen">
@@ -132,6 +178,30 @@ export default function Today({ outbox, online }: { outbox: number; online: bool
         <section>
           <h2>Needs you</h2>
           <ul className="rows">
+            {risks.map(({ project, risk }) => (
+              <li key={`risk-${project.id}`}>
+                <button type="button" className="row flagrow" onClick={() => go(`/project/${project.id}/schedule`)}>
+                  <span className="dot" aria-hidden="true" />
+                  <span className="stack-tight">
+                    <span className="row-title">Schedule at risk</span>
+                    <span className="muted small">
+                      {project.name} · {riskText(risk)}
+                    </span>
+                  </span>
+                </button>
+              </li>
+            ))}
+            {backupDue && (
+              <li>
+                <button type="button" className="row flagrow" onClick={() => go('/projects')}>
+                  <span className="dot" aria-hidden="true" />
+                  <span className="stack-tight">
+                    <span className="row-title">Backup due</span>
+                    <span className="muted small">{backupAge === null ? 'No backup made yet' : `Last one ${backupAge} days ago`} · download it on the Projects page</span>
+                  </span>
+                </button>
+              </li>
+            )}
             {toReview > 0 && (
               <li>
                 <button type="button" className="row flagrow" onClick={() => go('/review')}>

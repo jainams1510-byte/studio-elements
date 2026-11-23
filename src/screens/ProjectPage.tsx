@@ -6,8 +6,9 @@ import { STAGES, type Project } from '../types'
 import DrawingList from './DrawingList'
 import LogList from './LogList'
 import Reports from './Reports'
+import ScheduleTab from './ScheduleTab'
 
-export default function ProjectPage({ projectId, tab }: { projectId: string; tab: 'logs' | 'drawings' | 'reports' }) {
+export default function ProjectPage({ projectId, tab }: { projectId: string; tab: 'logs' | 'drawings' | 'schedule' | 'reports' }) {
   const [project, setProject] = useState<Project | null>(null)
 
   useEffect(() => {
@@ -56,6 +57,9 @@ export default function ProjectPage({ projectId, tab }: { projectId: string; tab
         <button type="button" aria-current={tab === 'drawings' ? 'page' : undefined} className={tab === 'drawings' ? 'on' : ''} onClick={() => go(`/project/${projectId}/drawings`)}>
           Drawings
         </button>
+        <button type="button" aria-current={tab === 'schedule' ? 'page' : undefined} className={tab === 'schedule' ? 'on' : ''} onClick={() => go(`/project/${projectId}/schedule`)}>
+          Schedule
+        </button>
         <button type="button" aria-current={tab === 'reports' ? 'page' : undefined} className={tab === 'reports' ? 'on' : ''} onClick={() => go(`/project/${projectId}/reports`)}>
           Reports
         </button>
@@ -63,6 +67,7 @@ export default function ProjectPage({ projectId, tab }: { projectId: string; tab
 
       {tab === 'logs' && <LogList projectId={projectId} />}
       {tab === 'drawings' && <DrawingList projectId={projectId} />}
+      {tab === 'schedule' && <ScheduleTab projectId={projectId} project={project} />}
       {tab === 'reports' && <Reports projectId={projectId} />}
     </main>
   )
