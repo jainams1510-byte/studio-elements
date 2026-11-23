@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
-import { go, PROJECT_SELECT, useProjects } from '../hooks'
+import { go, PROJECT_SELECT, refreshProjects } from '../hooks'
+import { HEALTH_LABEL, type Health } from '../portfolio'
+import { usePortfolio } from '../usePortfolio'
+import { ProjectCard } from './PortfolioParts'
 import { supabase } from '../supabase'
 import { isOwner, useTeam } from '../team'
 import { STAGES, type Project } from '../types'
@@ -10,7 +13,8 @@ function parseList(text: string): string[] {
 }
 
 export default function Projects() {
-  const { projects, reload, error } = useProjects()
+  const { projects, states, reload: reloadPortfolio, error } = usePortfolio()
+  const [filter, setFilter] = useState<Health | 'all'>('all')
   const { me } = useTeam()
   const [name, setName] = useState('')
   const [stage, setStage] = useState(1)
@@ -18,6 +22,13 @@ export default function Projects() {
   const [busy, setBusy] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   const [removed, setRemoved] = useState<Project[]>([])
+
+  // Projects are cached by useProjects; refreshing the cache and the portfolio picks up the change.
+  const refresh = useCallback(async () => {
+    await refreshProjects().catch(() => undefined)
+    window.dispatchEvent(new Event('projects-changed'))
+    await reloadPortfolio()
+  }, [reloadPortfolio])
 
   const loadRemoved = useCallback(async () => {
     const { data } = await supabase.from('projects').select(PROJECT_SELECT).eq('archived', true).order('name')
@@ -34,7 +45,7 @@ export default function Projects() {
       setFormError(navigator.onLine ? err.message : 'No signal. Restoring a project needs a connection.')
       return
     }
-    await Promise.all([reload(), loadRemoved()])
+    await Promise.all([refresh(), loadRemoved()])
   }
 
   async function add(e: FormEvent) {
@@ -62,7 +73,7 @@ export default function Projects() {
     setName('')
     setRooms('')
     setStage(1)
-    await reload()
+    await refresh()
   }
 
   return (
@@ -76,19 +87,33 @@ export default function Projects() {
 
       {error && <p className="error" role="alert">{error}</p>}
 
+      {states.length > 0 && (
+        <div className="chips" role="group" aria-label="Filter projects">
+          <button type="button" className={filter === 'all' ? 'chip on' : 'chip'} aria-pressed={filter === 'all'} onClick={() => setFilter('all')}>
+            All {states.length}
+          </button>
+          {(['ok', 'risk', 'late', 'none'] as const)
+            .filter((h) => states.some((st) => st.health === h))
+            .map((h) => (
+              <button key={h} type="button" className={filter === h ? 'chip on' : 'chip'} aria-pressed={filter === h} onClick={() => setFilter(h)}>
+                {HEALTH_LABEL[h]} {states.filter((st) => st.health === h).length}
+              </button>
+            ))}
+        </div>
+      )}
+
       <ul className="rows">
-        {projects.map((p) => (
-          <li key={p.id}>
-            <button type="button" className="row" onClick={() => go(`/project/${p.id}`)}>
-              <span className="row-title">{p.name}</span>
-              <span className="muted small">
-                Stage {p.stage} of 8 · {STAGES[p.stage - 1]}
-                {p.rooms.length ? ` · ${p.rooms.length} rooms` : ''}
-              </span>
-            </button>
-          </li>
-        ))}
+        {states
+          .filter((st) => filter === 'all' || st.health === filter)
+          .sort((a, b) => (a.daysLeft ?? 99999) - (b.daysLeft ?? 99999))
+          .map((st) => (
+            <ProjectCard key={st.project.id} s={st} />
+          ))}
       </ul>
+
+      <button type="button" className="secondary" onClick={() => go('/team')}>
+        Team workload
+      </button>
 
       <section>
         <h2>Add a project</h2>

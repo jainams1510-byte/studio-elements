@@ -5,7 +5,9 @@ Built so far: sign-in, projects (add, edit, remove, restore), the site log with 
 the drawing register (sheets, P/R revisions, issues to site, out-of-date print flags), and the AI layer
 (voice-note transcripts and summaries, a two-person review queue, weekly client and internal report drafts),
 the schedule (tasks, "After" links, stage templates, our own critical path, baseline and change log, phone list and
-desktop timeline) and an owner-only backup download.
+desktop timeline, phone timeline) and an owner-only backup download, plus a studio overview: status per project
+(on track / at risk / delayed), progress against plan, days to handover, a handover chart, drafted messages to
+share yourself, team workload and a latest-activity feed.
 
 ## What is in here
 
@@ -21,6 +23,10 @@ desktop timeline) and an owner-only backup download.
 | `src/schedule.ts` | Working calendar (Mon–Sat by default, holidays) and the critical path: forward and backward pass, float, slip |
 | `src/templates.ts` | Stage templates: the tasks and placeholder durations a new schedule starts with |
 | `src/useSchedule.ts` | Loads a project's schedule; sheet-gate and Today risk rules |
+| `src/portfolio.ts` | Project status, progress vs plan, days to handover, drafted messages, team workload (all derived, nothing stored or sent) |
+| `src/usePortfolio.ts` | Loads every project's schedule and register for Today, Projects, Drafts and Team; remembers handled drafts on the device |
+| `e2e/mobile_layout.py` | Every screen at 360 and 390 px: nothing wider than the screen, text boxes 16 px, timeline swipes |
+| `e2e/standin.py` | Stand-in Supabase server shared by the schedule and phone tests |
 | `src/backup.ts` | Builds the backup ZIP: every table as data.json plus every photo and voice note |
 | `supabase/005_schedule.sql` | Database part 5: calendar, tasks, change log, backup log, and their rules |
 | `supabase/tests/005_schedule_rules.sql` | Live rule checks for part 5 (always rolls back) |
@@ -71,5 +77,7 @@ and `python3 e2e/smoke.py` (or `register.py`, `ai.py`) in another (needs Python 
 - Only an owner can freeze or re-baseline, remove or restore a task, or record a backup. A frozen baseline cannot be
   unfrozen. After the freeze, any change to a duration, a link, a task's existence or the calendar needs a reason,
   and the database writes it to the change log.
+- Drafted messages are suggestions only: the app never sends anything. You edit, then share or copy.
+- Every screen must fit a 360 px phone without sideways scrolling, and text boxes stay at 16 px so iPhones do not zoom.
 - Weekly reports use typed notes and verified voice summaries only. An approved report is never
   overwritten by a new draft, and nothing is sent from the app: you share it yourself.

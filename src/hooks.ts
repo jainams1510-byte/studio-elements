@@ -114,8 +114,11 @@ export function useProjects(): { projects: Project[]; reload: () => Promise<void
       if (live && cached) setProjects((current) => (current.length ? current : cached))
     })
     void reload()
+    const onChange = () => void reload()
+    window.addEventListener('projects-changed', onChange)
     return () => {
       live = false
+      window.removeEventListener('projects-changed', onChange)
     }
   }, [reload])
 

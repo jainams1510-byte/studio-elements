@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { cacheGet } from '../db'
 import { todayLocal } from '../drawings'
 import { go } from '../hooks'
@@ -11,7 +11,6 @@ import TaskEditor from './TaskEditor'
 
 const ROW = 30
 const HEAD = 46
-const NAME_W = 300
 const COLORS = {
   ink: '#2B2B29',
   muted: '#5F5C56',
@@ -29,11 +28,16 @@ export default function Timeline({ projectId }: { projectId: string }) {
   const { me } = useTeam()
   const [selected, setSelected] = useState<string | null>(null)
   const [editing, setEditing] = useState(false)
-  const [zoom, setZoom] = useState(14)
-  const [wide, setWide] = useState(() => window.innerWidth >= 900)
+  const [zoom, setZoom] = useState(() => (window.innerWidth < 700 ? 6 : 14))
+  const [viewW, setViewW] = useState(() => window.innerWidth)
+  const wide = viewW >= 900
+  const phone = viewW < 700
+  const NAME_W = phone ? 128 : 300
+  const chartRef = useRef<HTMLDivElement>(null)
+  const scrolledFor = useRef<string | null>(null)
 
   useEffect(() => {
-    const onResize = () => setWide(window.innerWidth >= 900)
+    const onResize = () => setViewW(window.innerWidth)
     window.addEventListener('resize', onResize)
     return () => window.removeEventListener('resize', onResize)
   }, [])
@@ -60,6 +64,19 @@ export default function Timeline({ projectId }: { projectId: string }) {
   const today = todayLocal()
   const { tasks, result, settings, calendar } = data
   const planned = useMemo(() => result?.tasks ?? {}, [result])
+
+  // Open the chart at today (a little before it), once per zoom level.
+  const ready = Boolean(settings && calendar && result)
+  useEffect(() => {
+    const el = chartRef.current
+    const key = `${zoom}`
+    if (!el || !ready || scrolledFor.current === key) return
+    const marker = el.querySelector<SVGLineElement>('line[data-today]')
+    if (marker) {
+      el.scrollLeft = Math.max(0, Number(marker.getAttribute('x1')) - el.clientWidth / 4)
+      scrolledFor.current = key
+    }
+  })
 
   const lines: Line[] = useMemo(() => {
     const live = tasks.filter((t) => !t.removed_at && planned[t.id])
@@ -163,7 +180,7 @@ export default function Timeline({ projectId }: { projectId: string }) {
           <button type="button" className={zoom === 28 ? 'chip on' : 'chip'} onClick={() => setZoom(28)}>Days</button>
         </span>
       </div>
-      {!wide && <p className="notice">The timeline is made for a laptop screen. Editing here is desktop only; use the Schedule tab on the phone.</p>}
+      {phone && <p className="muted small">Swipe the chart sideways. Tap a task for its dates and links.</p>}
 
       <div className={editing && sel && wide ? 'timeline-layout with-panel' : 'timeline-layout'}>
         <div className="gantt" role="region" aria-label="Timeline" tabIndex={0}>
@@ -195,7 +212,7 @@ export default function Timeline({ projectId }: { projectId: string }) {
               ),
             )}
           </div>
-          <div className="gantt-chart">
+          <div className="gantt-chart" ref={chartRef}>
             <svg width={width} height={height} role="img" aria-label="Bars for each task">
               <defs>
                 <marker id="arrowhead" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto">
@@ -272,7 +289,7 @@ export default function Timeline({ projectId }: { projectId: string }) {
               {sel && selPreds.map((id) => arrow(id, sel.id, `in${id}`))}
               {sel && selSuccs.map((id) => arrow(sel.id, id, `out${id}`))}
 
-              <line x1={x(today) + zoom / 2} x2={x(today) + zoom / 2} y1={HEAD} y2={height} stroke={COLORS.accent} strokeWidth={1.5} strokeDasharray="4 3" />
+              <line data-today="" x1={x(today) + zoom / 2} x2={x(today) + zoom / 2} y1={HEAD} y2={height} stroke={COLORS.accent} strokeWidth={1.5} strokeDasharray="4 3" />
               <text x={x(today) + zoom / 2 + 4} y={HEAD + 12} fontSize={11} fontWeight={600} fill={COLORS.accent}>
                 Today
               </text>
@@ -296,6 +313,11 @@ export default function Timeline({ projectId }: { projectId: string }) {
             {wide && data.state === 'ready' && (
               <button type="button" className="secondary" onClick={() => setEditing(true)}>
                 Edit task
+              </button>
+            )}
+            {!wide && (
+              <button type="button" className="secondary" onClick={() => go(`/project/${projectId}/schedule`)}>
+                Edit in the Schedule tab
               </button>
             )}
           </div>

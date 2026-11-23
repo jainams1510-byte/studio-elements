@@ -272,7 +272,8 @@ with sync_playwright() as p:
 
     # Remove and restore
     page.get_by_role("button", name="Projects", exact=True).click()
-    page.get_by_role("button", name=re.compile("^Sparsh Ekaya")).click()
+    expect(page.get_by_role("heading", name="Projects", exact=True)).to_be_visible()
+    page.locator(".pcard", has_text="Sparsh Ekaya").click()
     page.get_by_role("button", name="Edit").click()
     page.get_by_role("button", name="Remove this project").click()
     expect(page.get_by_text(re.compile("Its site logs and drawings are kept"))).to_be_visible()

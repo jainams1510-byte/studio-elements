@@ -1,6 +1,6 @@
 # Studio Elements project tool: handover
 
-Everything needed to continue building this project in a new chat. Written 23 Nov 2026; updated the same day after Schedule part 1 and the backup download went live.
+Everything needed to continue building this project in a new chat. Written 23 Nov 2026; updated the same day after Schedule part 1, the backup download, the phone-layout fixes and the studio overview went live.
 
 ---
 
@@ -82,7 +82,8 @@ The companion file `Studio PM tool build routes.md` is the sourced research repo
 | Decisions and variations | Not started |
 | Procurement (order-by dates) | Not started |
 | Schedule part 1: tasks, After links, templates, critical path, baseline + change log, phone tab, desktop timeline, Today risks | **Live 23 Nov.** 23 live rule checks passed; 50 unit tests; browser test 33/33 with a stand-in. **Not yet tried on a phone or with real tasks.** Template durations are placeholders. |
-| Schedule part 2: calendar view, procurement, automations' drafted messages | Not started (**next**) |
+| Phone layout fixes + studio overview (from Jainam's earlier "Studio Dashboard" prototype): status per project, progress vs plan, days to handover, handover chart, Drafts outbox, Team workload, activity feed | **Live 23 Nov.** Phone-layout test 81/81 at 360 and 390 px; 58 unit tests. Phone checks of steps 1–5 passed (Jainam, 23 Nov). **Overview not yet tried on a phone.** |
+| Schedule part 2: calendar view, procurement, order-by drafts | Not started (**next**) |
 | Money (budget, RA bills, fee invoices) | Not started |
 | Hardening | **Backup download live 23 Nov** (owner-only ZIP: all tables + media; backup log; "Backup due" on Today after 7 days). Restore drill and access test suite not started. **Make the first backup now.** |
 
@@ -96,7 +97,9 @@ Hash routes: `#/` Today, `#/log`, `#/projects`, `#/project/:id` (tabs: Site logs
 
 - **Sign in:** email and password. Accounts are created by hand in Supabase (Authentication > Users > auto-confirm). New sign-ups should be switched off.
 - **Today:**
-  - "Needs you": schedule at risk (per project), backup due (owners, after 7 days), drawing flags (site holds an outdated or P print), voice notes to review, and a weekly report due (from Friday 5 pm until this week's client report is approved).
+  - Briefing (counts by status, biggest concern) and three tiles: drafts to send, overdue tasks, voice notes to review.
+  - Forecast handover chart across projects; project cards (status, progress bar with plan tick, days to handover, overdue, reasons); latest activity (logs, revisions, issues, schedule changes).
+  - "Needs you": drafts ready, schedule at risk (per project), backup due (owners, after 7 days), drawing flags (site holds an outdated or P print), voice notes to review, and a weekly report due (from Friday 5 pm until this week's client report is approved).
   - Projects with an 8-stage bar.
   - Latest 10 logs, with photo count and voice note marker.
   - Unsent-upload count and a stuck-upload message.
@@ -104,7 +107,9 @@ Hash routes: `#/` Today, `#/log`, `#/projects`, `#/project/:id` (tabs: Site logs
   - Project, photos (compressed on the phone), hold-to-record voice note, room and trade chips, one optional line.
   - Saved to the phone first (IndexedDB), read back to confirm, then uploaded when there is signal.
   - Capture-only mode when signed out and offline (for someone who signed in on that phone before).
-- **Projects:** add (duplicate names refused); removed projects listed with Restore; **Backup** card for owners (download ZIP, last backup shown).
+- **Drafts (`#/drafts`):** messages suggested by rules (late milestone → client; old/preliminary print on site → site; sheet not at R0 → design team; overdue task → its owner), each with its reason. Edit, then Share (share sheet) or Copy; Dismiss. Handled drafts are remembered **on that device only** (localStorage) and come back if the situation changes. English only for now.
+- **Team (`#/team`):** unfinished tasks by owner name across projects, running or starting within 4 weeks, overdue first.
+- **Projects:** status filter chips and project cards; Team workload button; add (duplicate names refused); removed projects listed with Restore; **Backup** card for owners (download ZIP, last backup shown).
 - **Project page:**
   - Edit (name, code, stage, rooms, trades; Remove with inline confirm).
   - **Site logs tab:**
@@ -213,6 +218,8 @@ A summary is verified when two different people confirm it and at least one is `
 | `schedule.ts` | `WorkCalendar` (working-day numbers both ways, holidays) and `computeSchedule` (forward/backward pass with progress and today, float, slip, critical path, loop detection), `baselinePlan`, `makesLoop`, `statusLabel`. |
 | `templates.ts` | Stage templates (8 stages, exit-gate milestones, placeholder durations) and `templateRows(project, fromStage)`. |
 | `useSchedule.ts` | Loads and caches a schedule; `gateFlag` (sheet not at R within 7 days or started); `projectRisk` for Today (milestone > 7 working days late, overdue, gates, blocked, loops). |
+| `portfolio.ts` | `projectState` (health ok/risk/late/none, progress by working days done, plan from baseline, finish, days left, reasons), `buildDrafts`, `teamLoad`. |
+| `usePortfolio.ts` | Loads schedules, tasks and drawings for all projects (each part independently; cached); handled-draft memory. |
 | `backup.ts` | Backup ZIP (`data.json` of all 14 tables + `media/`), backup log, file save (share sheet on iPhone home-screen app). |
 | `ai.ts` | Loads voice logs with AI rows; review insert-then-update; edit summary. |
 | `media.ts` | Photo compression, audio recording. |
@@ -233,7 +240,8 @@ Stack versions: React 19, Vite 8, TypeScript 7, vite-plugin-pwa 2, supabase-js 2
 
 ## 8. How to test and deploy
 
-- `npm test`: 50 unit tests (queue, transcript requests, drawing rules, review rules, calendar and critical path, templates, risks, backup).
+- `npm test`: 58 unit tests (queue, transcript requests, drawing rules, review rules, calendar and critical path, templates, risks, backup, portfolio).
+- Browser tests share the stand-in server in `e2e/standin.py`.
 - Browser tests: run `npm run build`, then `npx vite preview --port 4173 --strictPort`, then `python3 e2e/<name>.py`. They need Playwright, Pillow and Chrome at `/usr/bin/google-chrome`. Each uses a stand-in Supabase in memory and never touches real data.
 
   | Test | Checks | Covers |
@@ -242,6 +250,7 @@ Stack versions: React 19, Vite 8, TypeScript 7, vite-plugin-pwa 2, supabase-js 2
   | `register.py` | 13 | Projects and drawing register |
   | `ai.py` | 13–14 | Review and reports; the report-due check runs only on weekends and Friday evening |
   | `logs.py` | 10 | Owner edit, remove, restore |
+  | `mobile_layout.py` | 81 | Every screen at 360 and 390 px fits, text boxes ≥ 16 px, timeline swipes and opens at today, drafts and team flows |
   | `schedule.py` | 33 | Schedule setup, critical path vs an independent count, edits, loops, freeze, reasons, flags, timeline, coordinator limits, backup ZIP |
 - **Live database rule tests:** run as a `DO` block that impersonates a user and ends in `raise exception 'RESULTS: …'`, so everything rolls back.
   - Set `request.jwt.claims` with `set_config(..., true)` and `execute 'set local role authenticated'`.
@@ -265,6 +274,8 @@ Stack versions: React 19, Vite 8, TypeScript 7, vite-plugin-pwa 2, supabase-js 2
 - iPhone PWAs upload only while the app is open (no Background Sync). Keep the unsent count visible and sync on open.
 - `rm` of paths outside the workspace (e.g. `/deno.lock`) is blocked. Use `deno check --no-lock`.
 - WebFetch to some sites needs approval that may go unanswered; use WebSearch instead.
+- Phone zoom-out: a grid `1fr` column cannot shrink below its content (long select options, iPhone date boxes). Use `minmax(0, 1fr)`; a sideways-scrolling child of a flex row needs `min-width: 0`. Text boxes under 16 px make iPhones zoom in. Run `e2e/mobile_layout.py` after any layout change.
+- Claude Code artifact links (claude.ai/code/artifact/…) cannot be read from here; ask for the HTML file.
 
 ---
 
@@ -364,6 +375,9 @@ Stack versions: React 19, Vite 8, TypeScript 7, vite-plugin-pwa 2, supabase-js 2
   | Fee milestone reached | Invoice not raised | Prompt GST invoice |
   | Fee invoice overdue | — | Draft reminders at 3 and 10 days |
 
+### 11.4b From the earlier Studio Dashboard prototype, still to do
+Finances (receivables, payables, margin by project, cash-flow forecast), vendor payments and on-time %, expenses vs budget: all wait for the Money module. Approval permissions per message type and a shared (cross-device) record of sent drafts. Hindi/Gujarati drafts. Dark mode was left out (departs from the off-white look).
+
 ### 11.5 Later
 - AI risk explanations (rules detect, AI only explains) and AI revision diffs (as a checklist).
 - Client login only after an access review; months 4–6 in the original plan.
@@ -422,6 +436,8 @@ Stack versions: React 19, Vite 8, TypeScript 7, vite-plugin-pwa 2, supabase-js 2
 ## 14. Commit history
 
 ```
+(next) Phone layout fixes and studio overview
+e83b5c0 Handover: routes, screens and backup notes
 daa8ebf Handover: schedule part 1 and backup are live
 98254c2 Schedule part 1 and owner backup download
 e27dfe8 Add handover document and build-route research report

@@ -1,15 +1,15 @@
 import { useEffect, useState } from 'react'
 import { BACKUP_EVERY_DAYS, lastBackup } from '../backup'
-import { DRAWING_SELECT, needsAttention, siteStatus, siteStatusText, todayLocal, type Drawing } from '../drawings'
 import { loadVoiceLogs, stateOf } from '../ai'
-import { go, useOutboxTick, useProjects } from '../hooks'
-import { reportDue, weekStart } from '../review'
+import { needsAttention, siteStatus, siteStatusText, todayLocal } from '../drawings'
+import { go, useOutboxTick } from '../hooks'
+import { HEALTH_LABEL, type Health } from '../portfolio'
 import { listOutbox, syncOutbox } from '../queue'
+import { reportDue, weekStart } from '../review'
 import { remote, supabase } from '../supabase'
-import { SCHEDULE_SELECT, TASK_SELECT, type ScheduleSettings, type Task } from '../schedule'
 import { isOwner, useTeam } from '../team'
-import { STAGES } from '../types'
-import { projectRisk, riskText } from '../useSchedule'
+import { useOpenDrafts, usePortfolio } from '../usePortfolio'
+import { HandoverChart, ProjectCard } from './PortfolioParts'
 
 type RecentLog = {
   id: string
@@ -23,48 +23,36 @@ type RecentLog = {
   site_log_photos: { id: string; removed_at?: string | null }[]
 }
 
+type Change = { id: string; project_id: string; kind: string; after: Record<string, unknown> | null; reason: string | null; changed_at: string }
+type Activity = { at: string; project: string; text: string; go: string }
+
 const dateFormat = new Intl.DateTimeFormat('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })
 const timeFormat = new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })
+const dayFormat = new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short' })
+
+const CHANGE_TEXT: Record<string, string> = {
+  added: 'Task added',
+  changed: 'Task changed',
+  removed: 'Task removed',
+  restored: 'Task restored',
+  baseline: 'Baseline frozen',
+  rebaseline: 'Re-baselined',
+  calendar: 'Calendar changed',
+}
 
 export default function Today({ outbox, online }: { outbox: number; online: boolean }) {
-  const { projects, error } = useProjects()
+  const { projects, states, drafts, drawings, error } = usePortfolio()
+  const openDrafts = useOpenDrafts(drafts)
   const tick = useOutboxTick()
   const [recent, setRecent] = useState<RecentLog[]>([])
+  const [changes, setChanges] = useState<Change[]>([])
   const [syncing, setSyncing] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
-  const [drawings, setDrawings] = useState<Drawing[]>([])
   const [toReview, setToReview] = useState(0)
   const [approvedThisWeek, setApprovedThisWeek] = useState<Set<string> | null>(null)
-  const [schedules, setSchedules] = useState<{ settings: ScheduleSettings[]; tasks: Task[] } | null>(null)
   const [backupAge, setBackupAge] = useState<number | null | undefined>(undefined)
   const { me } = useTeam()
   const owner = isOwner(me)
-
-  useEffect(() => {
-    let live = true
-    Promise.all([supabase.from('project_schedules').select(SCHEDULE_SELECT), supabase.from('tasks').select(TASK_SELECT).is('removed_at', null)]).then(
-      ([s, t]) => {
-        if (live && !s.error && !t.error) setSchedules({ settings: (s.data ?? []) as ScheduleSettings[], tasks: (t.data ?? []) as unknown as Task[] })
-      },
-    )
-    return () => {
-      live = false
-    }
-  }, [])
-
-  useEffect(() => {
-    if (!owner) return
-    let live = true
-    lastBackup().then(
-      (last) => {
-        if (live) setBackupAge(last ? Math.floor((Date.now() - Date.parse(last.made_at)) / 86_400_000) : null)
-      },
-      () => undefined,
-    )
-    return () => {
-      live = false
-    }
-  }, [owner])
 
   useEffect(() => {
     let live = true
@@ -92,20 +80,6 @@ export default function Today({ outbox, online }: { outbox: number; online: bool
   useEffect(() => {
     let live = true
     supabase
-      .from('drawings')
-      .select(DRAWING_SELECT)
-      .eq('archived', false)
-      .then(({ data }) => {
-        if (live && data) setDrawings(data as unknown as Drawing[])
-      })
-    return () => {
-      live = false
-    }
-  }, [])
-
-  useEffect(() => {
-    let live = true
-    supabase
       .from('site_logs')
       .select('id, note, room, trade, audio_path, logged_at, project_id, profiles(full_name), site_log_photos(id, removed_at)')
       .is('removed_at', null)
@@ -114,12 +88,34 @@ export default function Today({ outbox, online }: { outbox: number; online: bool
       .then(({ data }) => {
         if (!live || !data) return
         const list = data as unknown as RecentLog[]
-        setRecent(list.map((l) => ({ ...l, site_log_photos: l.site_log_photos.filter((ph) => !ph.removed_at) })))
+        setRecent(list.map((l) => ({ ...l, site_log_photos: (l.site_log_photos ?? []).filter((ph) => !ph.removed_at) })))
+      })
+    supabase
+      .from('schedule_changes')
+      .select('id, project_id, kind, after, reason, changed_at')
+      .order('changed_at', { ascending: false })
+      .limit(10)
+      .then(({ data }) => {
+        if (live && data) setChanges(data as Change[])
       })
     return () => {
       live = false
     }
   }, [tick])
+
+  useEffect(() => {
+    if (!owner) return
+    let live = true
+    lastBackup().then(
+      (last) => {
+        if (live) setBackupAge(last ? Math.floor((Date.now() - Date.parse(last.made_at)) / 86_400_000) : null)
+      },
+      () => undefined,
+    )
+    return () => {
+      live = false
+    }
+  }, [owner])
 
   useEffect(() => {
     // Show why a log is stuck, but only when there is signal to blame.
@@ -135,28 +131,60 @@ export default function Today({ outbox, online }: { outbox: number; online: bool
     setSyncing(false)
   }
 
+  const today = todayLocal()
   const projectName = (id: string) => projects.find((p) => p.id === id)?.name ?? 'Project'
-
-  // Prints on site that are out of date or not for construction, on active projects only.
   const activeIds = new Set(projects.map((p) => p.id))
-  const flags = drawings
+  const prints = drawings
     .filter((d) => activeIds.has(d.project_id))
     .map((d) => ({ d, status: siteStatus(d) }))
     .filter(({ status }) => needsAttention(status))
   const reportsDue = approvedThisWeek ? projects.filter((p) => !approvedThisWeek.has(p.id)) : []
-  const today = todayLocal()
-  const risks = schedules
-    ? projects
-        .map((p) => {
-          const settings = schedules.settings.find((x) => x.project_id === p.id)
-          if (!settings) return null
-          const risk = projectRisk(settings, schedules.tasks.filter((t) => t.project_id === p.id), drawings.filter((d) => d.project_id === p.id), today)
-          return risk ? { project: p, risk } : null
-        })
-        .filter((x) => x !== null)
-    : []
   const backupDue = owner && online && backupAge !== undefined && (backupAge === null || backupAge >= BACKUP_EVERY_DAYS)
-  const anyFlags = flags.length > 0 || toReview > 0 || reportsDue.length > 0 || risks.length > 0 || backupDue
+  const risky = states.filter((s) => s.health === 'late' || s.health === 'risk')
+  const count = (h: Health) => states.filter((s) => s.health === h).length
+  const overdue = states.reduce((a, s) => a + s.overdue.length, 0)
+  const worst = [...risky].sort((a, b) => (a.health === b.health ? b.reasons.length - a.reasons.length : a.health === 'late' ? -1 : 1))[0]
+
+  // Latest activity across the studio: logs, revisions, issues and schedule changes.
+  const activity: Activity[] = [
+    ...recent.map((l) => ({
+      at: l.logged_at,
+      project: projectName(l.project_id),
+      text:
+        `Site log${l.room ? `, ${l.room}` : ''}${l.trade ? `, ${l.trade}` : ''}` +
+        (l.note ? `: ${l.note}` : '') +
+        (l.site_log_photos.length ? ` · ${l.site_log_photos.length} ${l.site_log_photos.length === 1 ? 'photo' : 'photos'}` : '') +
+        (l.audio_path ? ' · voice note' : '') +
+        (l.profiles?.full_name ? ` · ${l.profiles.full_name}` : ''),
+      go: `/project/${l.project_id}`,
+    })),
+    ...drawings
+      .filter((d) => activeIds.has(d.project_id))
+      .flatMap((d) =>
+        d.drawing_revisions.flatMap((r) => [
+          { at: r.created_at, project: projectName(d.project_id), text: `${d.number} revised to ${r.code}${r.note ? `: ${r.note}` : ''}`, go: `/drawing/${d.id}` },
+          ...r.drawing_issues.map((i) => ({
+            at: i.created_at,
+            project: projectName(d.project_id),
+            text: `${d.number} ${r.code} issued to ${i.issued_to} by ${i.method}`,
+            go: `/drawing/${d.id}`,
+          })),
+        ]),
+      ),
+    ...changes
+      .filter((c) => activeIds.has(c.project_id))
+      .map((c) => ({
+        at: c.changed_at,
+        project: projectName(c.project_id),
+        text: `${CHANGE_TEXT[c.kind] ?? c.kind}${c.after?.name ? `: ${String(c.after.name)}` : ''}${c.reason ? ` (${c.reason})` : ''}`,
+        go: `/project/${c.project_id}/schedule`,
+      })),
+  ]
+    .filter((a) => a.at)
+    .sort((a, b) => b.at.localeCompare(a.at))
+    .slice(0, 12)
+
+  const anyFlags = prints.length > 0 || toReview > 0 || reportsDue.length > 0 || risky.length > 0 || backupDue || openDrafts.length > 0
 
   return (
     <main className="screen">
@@ -174,18 +202,55 @@ export default function Today({ outbox, online }: { outbox: number; online: bool
       {uploadError && <p className="error" role="alert">A log could not upload: {uploadError}</p>}
       {error && <p className="error" role="alert">{error}</p>}
 
+      {projects.length > 0 && (
+        <section className="brief">
+          <p>
+            {projects.length} active project{projects.length === 1 ? '' : 's'}
+            {states.some((s) => s.health !== 'none')
+              ? `: ${count('ok')} on track, ${count('risk')} at risk, ${count('late')} delayed.`
+              : '. No schedules yet.'}
+            {worst ? ` Biggest concern: ${worst.project.name}, ${worst.reasons[0] ?? HEALTH_LABEL[worst.health].toLowerCase()}.` : ''}
+          </p>
+          <div className="tiles">
+            <button type="button" className="tile-k" onClick={() => go('/drafts')}>
+              <b>{openDrafts.length}</b>
+              <span>Drafts to send</span>
+            </button>
+            <button type="button" className="tile-k" onClick={() => go('/projects')}>
+              <b>{overdue}</b>
+              <span>Overdue tasks</span>
+            </button>
+            <button type="button" className="tile-k" onClick={() => go('/review')}>
+              <b>{toReview}</b>
+              <span>Voice notes to review</span>
+            </button>
+          </div>
+        </section>
+      )}
+
       {anyFlags && (
         <section>
           <h2>Needs you</h2>
           <ul className="rows">
-            {risks.map(({ project, risk }) => (
-              <li key={`risk-${project.id}`}>
-                <button type="button" className="row flagrow" onClick={() => go(`/project/${project.id}/schedule`)}>
+            {openDrafts.length > 0 && (
+              <li>
+                <button type="button" className="row flagrow" onClick={() => go('/drafts')}>
                   <span className="dot" aria-hidden="true" />
                   <span className="stack-tight">
-                    <span className="row-title">Schedule at risk</span>
+                    <span className="row-title">{openDrafts.length === 1 ? '1 draft ready to send' : `${openDrafts.length} drafts ready to send`}</span>
+                    <span className="muted small">Check, edit and share them yourself</span>
+                  </span>
+                </button>
+              </li>
+            )}
+            {risky.map((s) => (
+              <li key={`risk-${s.project.id}`}>
+                <button type="button" className="row flagrow" onClick={() => go(`/project/${s.project.id}/schedule`)}>
+                  <span className="dot" aria-hidden="true" />
+                  <span className="stack-tight">
+                    <span className="row-title">{s.health === 'late' ? 'Schedule delayed' : 'Schedule at risk'}</span>
                     <span className="muted small">
-                      {project.name} · {riskText(risk)}
+                      {s.project.name} · {s.reasons.join(' · ')}
                     </span>
                   </span>
                 </button>
@@ -224,7 +289,7 @@ export default function Today({ outbox, online }: { outbox: number; online: bool
                 </button>
               </li>
             ))}
-            {flags.map(({ d, status }) => (
+            {prints.map(({ d, status }) => (
               <li key={d.id}>
                 <button type="button" className="row flagrow" onClick={() => go(`/drawing/${d.id}`)}>
                   <span className="dot" aria-hidden="true" />
@@ -241,6 +306,13 @@ export default function Today({ outbox, online }: { outbox: number; online: bool
         </section>
       )}
 
+      {states.some((s) => s.finish) && (
+        <section>
+          <h2>Forecast handovers</h2>
+          <HandoverChart states={states} today={today} />
+        </section>
+      )}
+
       <section>
         <h2>Projects</h2>
         {projects.length === 0 && (
@@ -252,45 +324,24 @@ export default function Today({ outbox, online }: { outbox: number; online: bool
           </p>
         )}
         <ul className="rows">
-          {projects.map((p) => (
-            <li key={p.id}>
-              <button type="button" className="row" onClick={() => go(`/project/${p.id}`)}>
-                <span className="row-title">{p.name}</span>
-                <span className="stagebar" aria-hidden="true">
-                  {STAGES.map((_, i) => (
-                    <span key={i} className={i + 1 < p.stage ? 'done' : i + 1 === p.stage ? 'now' : ''} />
-                  ))}
-                </span>
-                <span className="muted small">
-                  Stage {p.stage} of 8 · {STAGES[p.stage - 1]}
-                </span>
-              </button>
-            </li>
+          {states.map((s) => (
+            <ProjectCard key={s.project.id} s={s} />
           ))}
         </ul>
       </section>
 
       <section>
-        <h2>Latest site logs</h2>
-        {recent.length === 0 && <p className="muted">Nothing logged yet.</p>}
+        <h2>Latest activity</h2>
+        {activity.length === 0 && <p className="muted">Nothing logged yet.</p>}
         <ul className="rows">
-          {recent.map((log) => (
-            <li key={log.id}>
-              <button type="button" className="row" onClick={() => go(`/project/${log.project_id}`)}>
-                <span className="row-title">
-                  {projectName(log.project_id)}
-                  {log.room ? ` · ${log.room}` : ''}
-                  {log.trade ? ` · ${log.trade}` : ''}
+          {activity.map((a, i) => (
+            <li key={`${a.at}-${i}`}>
+              <button type="button" className="row" onClick={() => go(a.go)}>
+                <span className="row-line">
+                  <span className="row-title small-title">{a.project}</span>
+                  <span className="muted small nowrap">{a.at.length > 10 ? timeFormat.format(new Date(a.at)) : dayFormat.format(new Date(a.at))}</span>
                 </span>
-                {log.note && <span>{log.note}</span>}
-                <span className="muted small">
-                  {timeFormat.format(new Date(log.logged_at))}
-                  {log.profiles?.full_name ? ` · ${log.profiles.full_name}` : ''}
-                  {log.site_log_photos.length
-                    ? ` · ${log.site_log_photos.length} ${log.site_log_photos.length === 1 ? 'photo' : 'photos'}`
-                    : ''}
-                  {log.audio_path ? ' · voice note' : ''}
-                </span>
+                <span className="small">{a.text}</span>
               </button>
             </li>
           ))}

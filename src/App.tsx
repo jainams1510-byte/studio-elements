@@ -3,12 +3,14 @@ import { useEffect, useState } from 'react'
 import { go, useAutoSync, useHashRoute, useOnline, useOutboxCount } from './hooks'
 import NewLog from './screens/NewLog'
 import DrawingDetail from './screens/DrawingDetail'
+import Drafts from './screens/Drafts'
 import EditProject from './screens/EditProject'
 import ProjectPage from './screens/ProjectPage'
 import Projects from './screens/Projects'
 import Review from './screens/Review'
 import Timeline from './screens/Timeline'
 import SignIn from './screens/SignIn'
+import Team from './screens/Team'
 import Today from './screens/Today'
 import { supabase } from './supabase'
 
@@ -61,6 +63,8 @@ export default function App() {
   }
   else if (section === 'drawing' && id) screen = <DrawingDetail key={id} drawingId={id} />
   else if (section === 'review') screen = <Review />
+  else if (section === 'drafts') screen = <Drafts />
+  else if (section === 'team') screen = <Team />
   else screen = <Today outbox={outbox} online={online} />
 
   const onLog = section === 'log'
@@ -70,7 +74,7 @@ export default function App() {
       {screen}
       {!onLog && (
         <nav className="tabbar" aria-label="Main">
-          <button type="button" className={route === '/' ? 'tab active' : 'tab'} onClick={() => go('/')}>
+          <button type="button" className={route === '/' || section === 'drafts' ? 'tab active' : 'tab'} onClick={() => go('/')}>
             Today
           </button>
           <button type="button" className={section === 'review' ? 'tab active' : 'tab'} onClick={() => go('/review')}>
@@ -84,7 +88,7 @@ export default function App() {
           </button>
           <button
             type="button"
-            className={section === 'projects' || section === 'project' || section === 'drawing' ? 'tab active' : 'tab'}
+            className={section === 'projects' || section === 'project' || section === 'drawing' || section === 'team' ? 'tab active' : 'tab'}
             onClick={() => go('/projects')}
           >
             Projects
