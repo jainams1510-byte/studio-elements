@@ -30,3 +30,4 @@ $PSQL -d drill_b -c "insert into auth.users (id, email) values ('5ed9d262-a672-4
 $PSQL -d drill_b -f $DIR/restore.sql >/dev/null
 python3 scripts/drill/compare.py
 python3 scripts/drill/access_check.py
+psql -h $DIR -p $PORT -U postgres -d drill_b -Atf scripts/drill/fingerprint.sql | sed "s/^/Security fingerprint (must match live): /"

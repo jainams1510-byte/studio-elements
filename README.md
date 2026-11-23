@@ -52,6 +52,8 @@ share yourself, team workload and a latest-activity feed.
 
 `bash scripts/drill/run_drill.sh` rehearses steps 1, 2 and 4 on a scratch database (needs PostgreSQL 16), then tries
 every table as a signed-out visitor, a stranger, the coordinator and an owner (`scripts/drill/access_check.py`).
+It ends with a security fingerprint; run `scripts/drill/fingerprint.sql` in the live SQL editor and the two must match,
+otherwise live has drifted from the setup files. (Matched on 23 Nov: 270 items, `7e11a20f…`.)
 
 ## One-time setup
 
