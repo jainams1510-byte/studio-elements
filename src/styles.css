@@ -244,3 +244,9 @@ img, svg, video { max-width: 100%; }
   .gantt-stage { padding: 0 8px; font-size: 11px; }
 }
 .gantt-stage { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; line-height: 30px; }
+
+/* Project sections scroll sideways on a phone (10 sections) */
+.tabs.scroll-tabs { overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.tabs.scroll-tabs::-webkit-scrollbar { display: none; }
+.tabs.scroll-tabs button { flex: none; padding: 0 14px; white-space: nowrap; }
+.tabbar .tab { min-width: 0; flex: 1; padding: 0 2px; }

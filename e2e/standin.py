@@ -3,7 +3,7 @@ import base64, datetime as dt, io, json, re, sys, time, uuid, zipfile
 from urllib.parse import urlparse, parse_qs, unquote
 from playwright.sync_api import sync_playwright, expect
 
-APP = "http://localhost:4173/"
+APP = __import__("os").environ.get("APP_URL", "http://localhost:4173/")
 API = "https://obwkpheueqecifmeaqyc.supabase.co"
 CORS = {"access-control-allow-origin": "*", "access-control-allow-headers": "*", "access-control-allow-methods": "*"}
 PROJECT = "11111111-1111-4111-8111-111111111111"
@@ -83,6 +83,12 @@ class Store:
         self.photos = [{"id": "ph1", "log_id": "l1", "path": f"{PROJECT}/l1/ph1.jpg", "removed_at": None}]
         self.files = {f"{PROJECT}/l1/voice.webm": b"VOICE", f"{PROJECT}/l1/ph1.jpg": b"\xff\xd8JPEG"}
         self.patches = []
+        # Any other table: rows kept here by table name (see generic_table below).
+        self.tables = {}
+        self.role_name = "jainam"
+
+    def table(self, name):
+        return self.tables.setdefault(name, {})
 
     def frozen(self):
         s = self.schedules.get(PROJECT)
@@ -219,8 +225,103 @@ def handler(store):
             if path in store.files:
                 return route.fulfill(status=200, headers={**CORS, "content-type": "application/octet-stream"}, body=store.files[path])
             return route.fulfill(status=404, headers=hdr, body=json.dumps({"message": "not found"}))
+        if "/storage/v1/object/" in url and method in ("POST", "PUT") and "/sign/" not in url:
+            path = unquote(re.split(r"/storage/v1/object/(?:authenticated/)?site-media/", url)[1].split("?")[0])
+            store.files[path] = req.post_data_buffer or b""
+            return route.fulfill(status=200, headers=hdr, body=json.dumps({"Key": "site-media/" + path}))
+        if "/storage/v1/object/sign/site-media" in url and method == "POST":
+            data = json.loads(req.post_data or "{}")
+            paths = data.get("paths") or ([url.split("/sign/site-media/")[1].split("?")[0]] if "/sign/site-media/" in url else [])
+            signed = [{"path": p_, "signedURL": f"/object/sign/site-media/{p_}?token=t", "error": None} for p_ in paths]
+            return route.fulfill(status=200, headers=hdr, body=json.dumps(signed if data.get("paths") else {"signedURL": signed[0]["signedURL"]}))
+        if table:
+            return generic_table(store, route, req, table, method, f, body, single, hdr)
         return route.fulfill(status=404, headers=hdr, body=json.dumps({"message": f"not mocked: {method} {url}"}))
     return handle
+
+
+# Primary keys of the per-project and single-row tables (everything else uses "id").
+PKEYS = {"project_briefs": "project_id", "project_fees": "project_id", "fee_proposals": "project_id",
+         "project_decks": "project_id", "studio_settings": "id", "studio_private": "id", "site_log_ai": "log_id"}
+DEFAULTS = {
+    "studio_settings": {"name": "Studio Elements", "tagline": "Architecture · Interior Design · Project Management",
+                        "website": "www.studioelements.in", "email": "info@studioelements.in", "phone": "+91 8511357002",
+                        "gstin": "", "logo_path": None, "clauses": {}},
+    "studio_private": {"opening_cash": 0},
+}
+
+
+def generic_table(store, route, req, table, method, f, body, single, hdr):
+    """A small in-memory PostgREST: eq/is filters, insert (one or many, upsert), update by filter.
+    It does not run database rules; tests that need a rule should check the request instead."""
+    rows = store.table(table)
+    if table in DEFAULTS and 1 not in rows:
+        rows[1] = {"id": 1, **DEFAULTS[table]}
+    pk = PKEYS.get(table, "id")
+    prefer = req.headers.get("prefer") or ""
+    wants = "return=representation" in prefer
+
+    def out(lst, status=200):
+        if single:
+            if not lst:
+                return route.fulfill(status=406 if method != "GET" else 200, headers=hdr, body="null" if method == "GET" else json.dumps({"code": "PGRST116", "message": "no rows"}))
+            return route.fulfill(status=status, headers=hdr, body=json.dumps(lst[0]))
+        return route.fulfill(status=status, headers=hdr, body=json.dumps(lst))
+
+    if method == "GET":
+        return out([r for r in rows.values() if matches(r, f)])
+    if method == "POST":
+        items = body if isinstance(body, list) else [body]
+        saved = []
+        for it in items:
+            key = it.get(pk) if pk in it else (str(uuid.uuid4()) if pk == "id" else None)
+            if key in rows and "resolution=merge-duplicates" not in prefer:
+                if "resolution=ignore-duplicates" in prefer:
+                    continue
+                return route.fulfill(status=409, headers=hdr, body=json.dumps({"code": "23505", "message": "duplicate key value violates unique constraint"}))
+            row = {**rows.get(key, {"removed_at": None, "created_at": "2026-11-23T08:00:00Z"}), **it, pk: key}
+            rows[key] = row
+            saved.append(row)
+        return out(saved, 201) if wants else route.fulfill(status=201, headers=hdr, body="")
+    if method == "PATCH":
+        hit = [r for r in rows.values() if matches(r, f)]
+        for r in hit:
+            r.update(body or {})
+        return out(hit) if wants else route.fulfill(status=204, headers={**hdr})
+    return route.fulfill(status=405, headers=hdr, body=json.dumps({"message": "method not allowed"}))
+
+
+# ---- phone layout checks shared by browser tests ----------------------------------------------
+FIND_OVERFLOW = """() => {
+  const W = document.documentElement.clientWidth
+  const out = []
+  for (const el of document.querySelectorAll('body *')) {
+    const r = el.getBoundingClientRect()
+    if (r.width === 0 || r.right <= W + 1) continue
+    let p = el.parentElement, contained = false
+    while (p && p !== document.body) {
+      const ox = getComputedStyle(p).overflowX
+      if ((ox === 'auto' || ox === 'scroll' || ox === 'hidden' || ox === 'clip') && p.getBoundingClientRect().right <= W + 1) { contained = true; break }
+      p = p.parentElement
+    }
+    if (!contained) out.push(`${el.tagName.toLowerCase()}.${String(el.className).split(' ')[0]} right=${Math.round(r.right)}`)
+  }
+  return { W, inner: window.innerWidth, scroll: document.documentElement.scrollWidth, out: out.slice(0, 6) }
+}"""
+
+SMALL_INPUTS = """() => [...document.querySelectorAll('input:not([type=checkbox]):not([type=file]):not([type=radio]), select, textarea')]
+  .filter(e => e.getBoundingClientRect().width > 0 && parseFloat(getComputedStyle(e).fontSize) < 16)
+  .map(e => `${e.tagName.toLowerCase()} ${e.getAttribute('aria-label') || e.name || ''} ${getComputedStyle(e).fontSize}`)"""
+
+
+def fits_phone(page, name, width):
+    """Check the current screen fits a phone of this width and has no text box under 16 px."""
+    page.wait_for_timeout(250)
+    m = page.evaluate(FIND_OVERFLOW)
+    ok = m["inner"] <= width and m["scroll"] <= width and not m["out"]
+    check(f"{width}px  {name}: fits the screen", ok, "" if ok else f"inner {m['inner']}, scroll {m['scroll']}, {m['out']}")
+    small = page.evaluate(SMALL_INPUTS)
+    check(f"{width}px  {name}: text boxes 16 px or more", not small, "; ".join(small[:3]))
 
 
 def sign_in(page):

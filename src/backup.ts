@@ -22,6 +22,25 @@ export const BACKUP_TABLES: { name: string; order: string }[] = [
   { name: 'tasks', order: 'id' },
   { name: 'schedule_changes', order: 'id' },
   { name: 'backup_log', order: 'id' },
+  { name: 'vendors', order: 'id' },
+  { name: 'project_briefs', order: 'project_id' },
+  { name: 'quotes', order: 'id' },
+  { name: 'work_orders', order: 'id' },
+  { name: 'boq_items', order: 'id' },
+  { name: 'ra_bills', order: 'id' },
+  { name: 'ra_bill_lines', order: 'id' },
+  { name: 'decisions', order: 'id' },
+  { name: 'variations', order: 'id' },
+  { name: 'procurement_items', order: 'id' },
+  { name: 'site_visits', order: 'id' },
+  { name: 'project_decks', order: 'project_id' },
+  { name: 'studio_settings', order: 'id' },
+  // Owners only: a backup is made by an owner, so these come too.
+  { name: 'project_fees', order: 'project_id' },
+  { name: 'fee_proposals', order: 'project_id' },
+  { name: 'fee_invoices', order: 'id' },
+  { name: 'studio_costs', order: 'id' },
+  { name: 'studio_private', order: 'id' },
 ]
 
 const PAGE = 1000
@@ -58,6 +77,11 @@ export function referencedFiles(tables: Record<string, Row[]>): string[] {
   for (const r of tables.site_logs ?? []) add(r.audio_path)
   for (const r of tables.site_log_photos ?? []) add(r.path)
   for (const r of tables.drawing_issues ?? []) add(r.print_photo_path)
+  for (const r of tables.studio_settings ?? []) add(r.logo_path)
+  for (const r of tables.project_decks ?? []) {
+    add(r.key_plan_path)
+    for (const slide of (r.slides as { slots?: Record<string, string> }[] | null) ?? []) for (const p of Object.values(slide.slots ?? {})) add(p)
+  }
   return [...paths].sort()
 }
 

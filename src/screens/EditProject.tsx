@@ -3,6 +3,7 @@ import { cacheGet } from '../db'
 import { go, PROJECT_SELECT, refreshProjects } from '../hooks'
 import { supabase } from '../supabase'
 import { STAGES, type Project } from '../types'
+import BriefForm from './deck/BriefForm'
 
 function parseList(text: string): string[] {
   return [...new Set(text.split(',').map((s) => s.trim()).filter(Boolean))]
@@ -140,6 +141,7 @@ export default function EditProject({ projectId }: { projectId: string }) {
           </div>
         )}
       </section>
+      <BriefForm projectId={projectId} />
     </main>
   )
 }

@@ -7,8 +7,31 @@ import DrawingList from './DrawingList'
 import LogList from './LogList'
 import Reports from './Reports'
 import ScheduleTab from './ScheduleTab'
+import DecisionsTab from './decisions/DecisionsTab'
+import ProcurementTab from './decisions/ProcurementTab'
+import DeckTab from './deck/DeckTab'
+import ReviewTab from './deck/ReviewTab'
+import FeesTab from './fees/FeesTab'
+import MoneyTab from './money/MoneyTab'
+import { isOwner, useTeam } from '../team'
 
-export default function ProjectPage({ projectId, tab }: { projectId: string; tab: 'logs' | 'drawings' | 'schedule' | 'reports' }) {
+export const PROJECT_TABS = [
+  ['logs', 'Site logs'],
+  ['drawings', 'Drawings'],
+  ['schedule', 'Schedule'],
+  ['money', 'Money'],
+  ['fees', 'Fees'],
+  ['decisions', 'Decisions'],
+  ['procurement', 'Procurement'],
+  ['deck', 'Deck'],
+  ['reports', 'Reports'],
+  ['review', 'Review'],
+] as const
+export type ProjectTab = (typeof PROJECT_TABS)[number][0]
+
+export default function ProjectPage({ projectId, tab }: { projectId: string; tab: ProjectTab }) {
+  const { me } = useTeam()
+  const owner = isOwner(me)
   const [project, setProject] = useState<Project | null>(null)
 
   useEffect(() => {
@@ -50,25 +73,33 @@ export default function ProjectPage({ projectId, tab }: { projectId: string; tab
         </button>
       </header>
 
-      <nav className="tabs" aria-label="Project sections">
-        <button type="button" aria-current={tab === 'logs' ? 'page' : undefined} className={tab === 'logs' ? 'on' : ''} onClick={() => go(`/project/${projectId}`)}>
-          Site logs
-        </button>
-        <button type="button" aria-current={tab === 'drawings' ? 'page' : undefined} className={tab === 'drawings' ? 'on' : ''} onClick={() => go(`/project/${projectId}/drawings`)}>
-          Drawings
-        </button>
-        <button type="button" aria-current={tab === 'schedule' ? 'page' : undefined} className={tab === 'schedule' ? 'on' : ''} onClick={() => go(`/project/${projectId}/schedule`)}>
-          Schedule
-        </button>
-        <button type="button" aria-current={tab === 'reports' ? 'page' : undefined} className={tab === 'reports' ? 'on' : ''} onClick={() => go(`/project/${projectId}/reports`)}>
-          Reports
-        </button>
+      <nav className="tabs scroll-tabs" aria-label="Project sections">
+        {PROJECT_TABS.filter(([id]) => id !== 'fees' || owner).map(([id, label]) => (
+          <button
+            key={id}
+            type="button"
+            aria-current={tab === id ? 'page' : undefined}
+            className={tab === id ? 'on' : ''}
+            ref={(el) => {
+              if (el && tab === id) el.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+            }}
+            onClick={() => go(id === 'logs' ? `/project/${projectId}` : `/project/${projectId}/${id}`)}
+          >
+            {label}
+          </button>
+        ))}
       </nav>
 
       {tab === 'logs' && <LogList projectId={projectId} />}
       {tab === 'drawings' && <DrawingList projectId={projectId} />}
       {tab === 'schedule' && <ScheduleTab projectId={projectId} project={project} />}
+      {tab === 'money' && <MoneyTab projectId={projectId} />}
+      {tab === 'fees' && (owner ? <FeesTab projectId={projectId} /> : <p className="muted">Fees are visible to owners only.</p>)}
+      {tab === 'decisions' && <DecisionsTab projectId={projectId} />}
+      {tab === 'procurement' && <ProcurementTab projectId={projectId} />}
+      {tab === 'deck' && <DeckTab projectId={projectId} />}
       {tab === 'reports' && <Reports projectId={projectId} />}
+      {tab === 'review' && <ReviewTab projectId={projectId} />}
     </main>
   )
 }

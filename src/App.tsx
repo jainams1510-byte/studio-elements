@@ -5,7 +5,12 @@ import NewLog from './screens/NewLog'
 import DrawingDetail from './screens/DrawingDetail'
 import Drafts from './screens/Drafts'
 import EditProject from './screens/EditProject'
-import ProjectPage from './screens/ProjectPage'
+import ProjectPage, { PROJECT_TABS, type ProjectTab } from './screens/ProjectPage'
+import Studio from './screens/Studio'
+import Calendar from './screens/decisions/Calendar'
+import StudioSettings from './screens/deck/StudioSettings'
+import Finances from './screens/fees/Finances'
+import Vendors from './screens/fees/Vendors'
 import Projects from './screens/Projects'
 import Review from './screens/Review'
 import Timeline from './screens/Timeline'
@@ -58,13 +63,18 @@ export default function App() {
   else if (section === 'project' && id && sub === 'edit') screen = <EditProject key={id} projectId={id} />
   else if (section === 'project' && id && sub === 'timeline') screen = <Timeline key={id} projectId={id} />
   else if (section === 'project' && id) {
-    const tab = sub === 'drawings' || sub === 'reports' || sub === 'schedule' ? sub : 'logs'
+    const tab: ProjectTab = PROJECT_TABS.some(([t]) => t === sub) ? (sub as ProjectTab) : 'logs'
     screen = <ProjectPage key={id} projectId={id} tab={tab} />
   }
   else if (section === 'drawing' && id) screen = <DrawingDetail key={id} drawingId={id} />
   else if (section === 'review') screen = <Review />
   else if (section === 'drafts') screen = <Drafts />
   else if (section === 'team') screen = <Team />
+  else if (section === 'studio') screen = <Studio />
+  else if (section === 'finances') screen = <Finances />
+  else if (section === 'vendors') screen = <Vendors />
+  else if (section === 'calendar') screen = <Calendar />
+  else if (section === 'settings') screen = <StudioSettings />
   else screen = <Today outbox={outbox} online={online} />
 
   const onLog = section === 'log'
@@ -88,10 +98,17 @@ export default function App() {
           </button>
           <button
             type="button"
-            className={section === 'projects' || section === 'project' || section === 'drawing' || section === 'team' ? 'tab active' : 'tab'}
+            className={section === 'projects' || section === 'project' || section === 'drawing' ? 'tab active' : 'tab'}
             onClick={() => go('/projects')}
           >
             Projects
+          </button>
+          <button
+            type="button"
+            className={['studio', 'finances', 'vendors', 'calendar', 'settings', 'team'].includes(section ?? '') ? 'tab active' : 'tab'}
+            onClick={() => go('/studio')}
+          >
+            Studio
           </button>
         </nav>
       )}
