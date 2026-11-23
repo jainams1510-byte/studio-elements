@@ -50,7 +50,8 @@ share yourself, team workload and a latest-activity feed.
 4. Load `restore.sql` in the SQL editor. It runs as one step: if anything fails, nothing changes.
 5. Upload the ZIP's `media/` folder to the `site-media` bucket, keeping the paths.
 
-`bash scripts/drill/run_drill.sh` rehearses steps 1, 2 and 4 on a scratch database (needs PostgreSQL 16).
+`bash scripts/drill/run_drill.sh` rehearses steps 1, 2 and 4 on a scratch database (needs PostgreSQL 16), then tries
+every table as a signed-out visitor, a stranger, the coordinator and an owner (`scripts/drill/access_check.py`).
 
 ## One-time setup
 

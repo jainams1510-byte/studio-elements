@@ -29,3 +29,4 @@ python3 scripts/restore_check.py $DIR/data.json --sql $DIR/restore.sql
 $PSQL -d drill_b -c "insert into auth.users (id, email) values ('5ed9d262-a672-4844-996b-7e8de37fa9da','owner@example.com'),('1fd9ffad-cfc4-44d1-ac2f-14f4318cf0d2','studio@example.com')"
 $PSQL -d drill_b -f $DIR/restore.sql >/dev/null
 python3 scripts/drill/compare.py
+python3 scripts/drill/access_check.py

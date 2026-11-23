@@ -53,3 +53,16 @@ begin
   insert into public.site_logs (id, project_id, note, logged_at, created_by) values (gen_random_uuid(), p, 'Coordinator log', now(), auth.uid());
   execute 'reset role';
 end $$;
+
+-- AI rows are written by the server-side function (not the app), so they are added here as the server would.
+insert into public.site_log_ai (log_id, status, language, transcript, summary, model)
+select id, 'done', 'Gujarati', 'transcript', 'Toilet flooring started', 'gemini' from public.site_logs order by logged_at limit 1;
+insert into public.weekly_reports (project_id, week_start, kind, body, model)
+select id, date '2026-11-23', 'internal', 'Week summary', 'gemini' from public.projects limit 1;
+-- The coordinator confirms the AI summary through the app's rules.
+do $$ begin
+  perform set_config('request.jwt.claims', '{"sub":"1fd9ffad-cfc4-44d1-ac2f-14f4318cf0d2","role":"authenticated"}', true);
+  execute 'set local role authenticated';
+  insert into public.site_log_reviews (log_id, decision) select log_id, 'confirm' from public.site_log_ai;
+  execute 'reset role';
+end $$;
