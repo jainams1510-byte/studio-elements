@@ -92,11 +92,11 @@ The original "one week" sprint (14–20 Nov) slipped. Rule: each module ends wit
 
 ## 4. What is live, screen by screen
 
-Hash routes: `#/` Today, `#/log`, `#/projects`, `#/project/:id` (tabs: Site logs, Drawings, Reports), `#/project/:id/drawings`, `#/project/:id/reports`, `#/project/:id/edit`, `#/drawing/:id`, `#/review`. Tab bar: **Today · Review · + · Projects**.
+Hash routes: `#/` Today, `#/log`, `#/projects`, `#/project/:id` (tabs: Site logs, Drawings, Schedule, Reports), `#/project/:id/drawings`, `#/project/:id/schedule`, `#/project/:id/reports`, `#/project/:id/timeline` (desktop, full width), `#/project/:id/edit`, `#/drawing/:id`, `#/review`. Tab bar: **Today · Review · + · Projects**.
 
 - **Sign in:** email and password. Accounts are created by hand in Supabase (Authentication > Users > auto-confirm). New sign-ups should be switched off.
 - **Today:**
-  - "Needs you": drawing flags (site holds an outdated or P print), voice notes to review, and a weekly report due (from Friday 5 pm until this week's client report is approved).
+  - "Needs you": schedule at risk (per project), backup due (owners, after 7 days), drawing flags (site holds an outdated or P print), voice notes to review, and a weekly report due (from Friday 5 pm until this week's client report is approved).
   - Projects with an 8-stage bar.
   - Latest 10 logs, with photo count and voice note marker.
   - Unsent-upload count and a stuck-upload message.
@@ -104,13 +104,15 @@ Hash routes: `#/` Today, `#/log`, `#/projects`, `#/project/:id` (tabs: Site logs
   - Project, photos (compressed on the phone), hold-to-record voice note, room and trade chips, one optional line.
   - Saved to the phone first (IndexedDB), read back to confirm, then uploaded when there is signal.
   - Capture-only mode when signed out and offline (for someone who signed in on that phone before).
-- **Projects:** add (duplicate names refused); removed projects listed with Restore.
+- **Projects:** add (duplicate names refused); removed projects listed with Restore; **Backup** card for owners (download ZIP, last backup shown).
 - **Project page:**
   - Edit (name, code, stage, rooms, trades; Remove with inline confirm).
   - **Site logs tab:**
     - Photos, voice, AI summary with a Verified / Unverified tag, "Logged by", "edited by".
     - Owners get **Edit or remove**: edit note, room or trade; remove single photos; remove the log; a removed list with Restore.
   - **Drawings tab:** register sorted by discipline, current revision, site status, offline cache.
+  - **Schedule tab:** setup (start date, working days, template from a stage); forecast finish vs baseline with slip; critical-path strip; flags (sheet gate, overdue, blocked, milestone > 7 working days late); tasks by stage with Start/Done/Reached buttons; task editor (After links, loops not offered, trade, room, owner, sheet gate, status and actual dates; reason box once frozen; owner Remove); baseline card (owner Freeze / Re-baseline); calendar settings; change log; removed tasks with Restore. Read-only offline from the phone's copy.
+- **Timeline (desktop):** bars (critical green, other grey, done light), spare days as an outline, baseline line, milestone diamonds, Sunday/holiday shading, Today line, zoom Months/Weeks/Days, select a task for arrows and details, edit beside the chart on screens 900 px and wider.
   - **Reports tab:**
     - This week or last week; client language (English, Hindi, Gujarati).
     - Draft reports, edit, Approve, Share (phone share sheet or copy).
@@ -215,7 +217,7 @@ A summary is verified when two different people confirm it and at least one is `
 | `ai.ts` | Loads voice logs with AI rows; review insert-then-update; edit summary. |
 | `media.ts` | Photo compression, audio recording. |
 | `db.ts` | IndexedDB (idb): outbox and cache. |
-| `screens/*` | Today, NewLog, Projects, ProjectPage, LogList, DrawingList, DrawingDetail, EditProject, Review, Reports, SignIn. |
+| `screens/*` | Today, NewLog, Projects, BackupCard, ProjectPage, LogList, DrawingList, DrawingDetail, EditProject, ScheduleTab, TaskEditor, Timeline, Review, Reports, SignIn. |
 | `supabase/functions/ai/index.ts` | `health`, `transcribe {log_id, force?}`, `weekly_report {project_id, week_start, language}` (details below). |
 
 Edge function notes:
@@ -271,7 +273,7 @@ Stack versions: React 19, Vite 8, TypeScript 7, vite-plugin-pwa 2, supabase-js 2
 - Never ask for or accept in chat: the database password, the Supabase secret/service key, or the Google (Gemini) key. Only the publishable key is safe in chat or code.
 - Nothing goes to clients or vendors from the app; Jainam shares it himself.
 - No client logins until access rules pass a proper review (planned for months 4–6 originally; Jainam has not approved any client access).
-- The free tier has no backups: build the weekly export (11.1) before relying on the data.
+- The free tier has no backups: download one weekly (Projects page) and keep it on the shared drive. The restore drill is still to do.
 - India's DPDP Act duties are enforceable from mid-May 2027. Plan for consent at onboarding, access logs and deletion at project close (planning guidance, not legal advice).
 
 ---
@@ -420,7 +422,9 @@ Stack versions: React 19, Vite 8, TypeScript 7, vite-plugin-pwa 2, supabase-js 2
 ## 14. Commit history
 
 ```
-(next) Schedule part 1 and owner backup download
+daa8ebf Handover: schedule part 1 and backup are live
+98254c2 Schedule part 1 and owner backup download
+e27dfe8 Add handover document and build-route research report
 4b6486c README: log editing and removal
 b0cb21e Owners can edit, remove and restore site logs and remove single photos
 cf36bb9 AI layer: voice-note transcripts, two-person review queue, weekly report drafts
