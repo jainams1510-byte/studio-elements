@@ -35,7 +35,7 @@ The companion file `Studio PM tool build routes.md` is the sourced research repo
 - **Daily entry budget:** about 15 minutes a day. He prefers logging on his phone; a laptop is used for setup.
 - **Pilot projects:**
   - Sparsh Ekaya / Shah Residence: client Mr Sunil Shah, 4BHK, working-drawings stage.
-  - Aggrawal Atelier: execution stage, **not yet added to the app**.
+  - Aggrawal Atelier: added to the app (stage 8, 6 rooms); sheets and schedule not yet entered.
 
 ---
 
@@ -157,7 +157,7 @@ Hash routes: `#/` Today, `#/log`, `#/projects`, `#/project/:id` (tabs: Site logs
 | Storage | Private bucket `site-media`. Logs are stored at `<project>/<log>/<photo>.jpg` and `/voice.webm` (or `.m4a`). Print photos are stored at `drawings/<drawing>/…`. |
 | Drawing PDFs | Stay on the shared drive (Drive link or office server) and are linked from the register, to save the 1 GB. |
 | Users | Jainam `jainams1510@gmail.com` (role **owner**). Studio account `studioelements15@gmail.com` (role **coordinator**; shared by the site coordinator and the working team member). Display names are still email prefixes. Partners are not added. |
-| Data | Project "Sparsh Ekaya": stage 3, 8 rooms, 2 logs, one with a voice note not yet transcribed (`5e10eb24-9205-4fed-b3bd-175e0e6d41f1`). A duplicate Sparsh Ekaya is archived. Drawing SE-FL-01 has P1–P3 with issues. |
+| Data (25 Nov) | "Sparsh Ekaya": stage 4, 8 rooms, 24 tasks with a baseline frozen 23 Nov, 2 logs, one with a voice note not yet transcribed (`5e10eb24-9205-4fed-b3bd-175e0e6d41f1`). "Aggrawal Atelier": stage 8, 6 rooms, no schedule yet. A duplicate Sparsh Ekaya is archived. Part-6 tables are empty. One backup made. |
 | Wireframes | Design canvas "Studio tool wireframes": https://claude.ai/artifact/Rdu2KLrM3WZsZp1oqfhr8M. Dashboard, project page, site log, review queue, desktop timeline, desktop month calendar (Monday start), phone agenda. |
 | Project notes | claude.ai Project "Studio Elements", doc `claude/studio-tool-build-notes.md`. |
 
@@ -198,7 +198,7 @@ Repository files `supabase/001` to `006` match the live database: the security f
 | project_briefs | project_id PK, client_name/phone/email, site_address, city, typology, area + area_unit, issue/agreement/start/end dates, duration_months, client_budget, budget_includes_gst, estimate_gst_rate, contingency_pct, estimate_pdf (saved tick-box choices) |
 | boq_items | project, category, trade, room, item, unit, quantity, rate, wastage_pct, rate_source, verified, optional, work_order_id, committed_rate, removed_at |
 | quotes / work_orders | quote: vendor, trade, amount, status received/compared/accepted/rejected. Work order: vendor, quote, trade, amount, issued_on (tracked, not issued from the app) |
-| ra_bills / ra_bill_lines | bill: vendor, work order, bill_no (unique per project and vendor), claimed, certified, gst_rate, status, dates and paid_amount stamped by `ra_bill_rules`. Lines: boq item, claimed and certified qty, rate (filled from the committed rate); locked after certification |
+| ra_bills / ra_bill_lines | bill: vendor, work order, bill_no (unique per project and vendor), claimed, certified, gst_rate, status, dates and paid_amount stamped by `ra_bill_rules`. Lines: boq item, claimed and certified qty, rate (filled from the committed rate); only owners can change lines once the bill is certified |
 | project_fees, fee_proposals, fee_invoices, studio_costs, studio_private | **Owner-only** (row policies use `is_owner`). Invoice dates and paid_amount stamped by `fee_invoice_rules` |
 | studio_settings | single row id 1: name, tagline, phone, email, website, gstin, logo_path, clauses jsonb. Team reads, owners update |
 | decisions / variations | decision: kind rfi/approval/site_instruction/revision, question, answer, need_by, blocks, links, cost_impact, status; a cost impact creates one proposed variation. Variation: proposed → costed → client approved → executed → billed |
@@ -351,7 +351,7 @@ Every planned module is built and live. The work now is proving it with real dat
 11. **AI verification decision** is still open (Jainam + studio account, or studio account alone with a tick).
 
 ### 11.3 Known gaps
-- PDFs use built-in fonts: no ₹ sign ("Rs.") and Gujarati or Hindi item names print as "?". Embedding a Noto font would fix both (adds ~300 kB to the export chunk only).
+- PDFs use built-in fonts: no ₹ sign ("Rs.") and Gujarati or Hindi item names print as "?". Embedding a Noto font would fix both (roughly a few hundred kB, in the export chunk only; not measured).
 - Calendar has a month view on desktop but no week view.
 - Drafts are English only.
 - AI line-item suggestions for the estimate were deferred.
