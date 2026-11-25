@@ -1,1 +1,84 @@
-/* Styles for the decisions module. Keep to the design tokens in styles.css. */
+/* Styles for the decisions module (Decisions, Procurement, Calendar). Keep to the design tokens in styles.css. */
+
+/* ---- Cards and forms ---------------------------------------------------------------------- */
+.dc-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.dc-toolbar .select { min-width: 0; flex: 1 1 160px; }
+.dc-toolbar .select select { max-width: 100%; }
+.dc-add { flex: none; }
+.dc-card { gap: 8px; }
+.dc-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.dc-facts { margin: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px; }
+.dc-facts > div { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 8px; }
+.dc-facts dt { color: var(--muted); }
+.dc-facts dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.dc-answer { white-space: pre-wrap; overflow-wrap: anywhere; }
+.dc-actions { flex-wrap: wrap; justify-content: flex-start; gap: 8px; }
+.dc-actions > * { flex: 0 1 auto; width: auto; min-width: 88px; min-height: 44px; padding: 6px 16px; border-radius: 22px; font-size: 14px; line-height: 1.25; text-align: center; }
+.dc-draft { padding-top: 10px; border-top: 1px solid var(--line-soft); }
+.dc-form h2 { margin: 0; font-size: 16px; font-weight: 600; color: var(--ink); }
+.dc-calc { padding-left: 10px; border-left: 3px solid var(--line); }
+.dc-gate { font-weight: 400; }
+.dc-gate strong { font-weight: 600; }
+
+/* Segmented control: status steppers and two-way choices. */
+.dc-seg { display: grid; grid-auto-columns: minmax(0, 1fr); grid-auto-flow: column; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: var(--surface); }
+.dc-seg button { min-height: 44px; min-width: 0; padding: 0 4px; border: 0; border-left: 1px solid var(--line); background: transparent; font-size: 14px; color: var(--muted); overflow-wrap: anywhere; line-height: 1.2; }
+.dc-seg button:first-child { border-left: 0; }
+.dc-seg button.past { color: var(--ink); background: #eef2ef; }
+.dc-seg button.on { color: var(--accent-ink); background: var(--accent); font-weight: 600; }
+@media (max-width: 380px) { .dc-steps button { font-size: 13px; } }
+
+/* ---- Calendar ---------------------------------------------------------------------------- */
+.cal-controls { display: flex; flex-direction: column; gap: 10px; }
+.cal-controls .select select { max-width: 100%; width: 100%; }
+.cal-chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; margin: 0 -20px; padding: 0 20px; }
+.cal-chips::-webkit-scrollbar { display: none; }
+.cal-chips .chip { flex: none; display: inline-flex; align-items: center; gap: 6px; }
+.cal-ms { flex: none; display: inline-block; width: 8px; height: 8px; background: var(--accent); transform: rotate(45deg); }
+.chip.on .cal-ms { background: var(--accent-ink); }
+
+.cal-past { align-self: flex-start; }
+.cal-days { display: flex; flex-direction: column; }
+.cal-day { padding: 10px 0; border-top: 1px solid var(--line); }
+.cal-day.today { border-top: 2px solid var(--ink); }
+.cal-dayhead { margin: 0 0 6px; display: flex; gap: 8px; align-items: baseline; font-size: 14px; font-weight: 500; color: var(--muted); }
+.cal-dayhead b { color: var(--ink); font-weight: 600; }
+.cal-week { margin: 8px 0 0; text-transform: none; }
+.cal-empty { padding: 4px 0 2px; }
+.cal-entries { display: flex; flex-direction: column; gap: 6px; }
+.cal-entry { width: 100%; min-height: 52px; padding: 8px 12px; border: 1px solid var(--line); border-left: 3px solid var(--line); border-radius: 6px; background: var(--surface); text-align: left; display: flex; flex-direction: column; gap: 2px; }
+.cal-entry.ms { border-left-color: var(--accent); }
+.cal-tag { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--muted); letter-spacing: 0.01em; }
+.cal-entry.ms .cal-tag { color: var(--accent); }
+.cal-parts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.cal-parts .pill { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.cal-title { font-size: 15px; font-weight: 500; min-width: 0; overflow-wrap: anywhere; }
+
+/* Month grid (desktop, 900 px and wider). The app column is widened only for this screen. */
+@media (min-width: 900px) {
+  .app:has(> .cal-screen) { max-width: 1240px; }
+  .cal-screen { padding: 0 32px 32px; }
+  .cal-controls { flex-direction: row; align-items: center; }
+  .cal-controls .select { flex: none; }
+  .cal-controls .select select { width: auto; min-width: 200px; }
+  .cal-chips { flex-wrap: wrap; overflow: visible; margin: 0; padding: 0; }
+}
+.cal-monthbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.cal-monthname { margin: 0; font-size: 22px; font-weight: 600; color: var(--ink); }
+.cal-nav { display: flex; gap: 8px; }
+.cal-grid { border: 1px solid var(--line); border-radius: 8px; background: var(--surface); overflow: hidden; }
+.cal-row { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.cal-row + .cal-row { border-top: 1px solid var(--line-soft); }
+.cal-wd { padding: 8px 10px; font-size: 12px; font-weight: 600; color: var(--muted); background: #f0ede6; }
+.cal-cell { min-height: 118px; padding: 4px 6px 8px; border-left: 1px solid var(--line-soft); display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.cal-cell:first-child { border-left: 0; }
+.cal-cell.out { background: #faf9f6; }
+.cal-cell.out .cal-num { color: #a9a59d; }
+.cal-cell.sel { background: #f3f6f4; }
+.cal-num { align-self: flex-start; min-width: 30px; height: 30px; padding: 0 6px; border: 0; border-radius: 15px; background: transparent; font-size: 13px; font-weight: 500; }
+.cal-cell.today .cal-num { background: var(--ink); color: var(--ground); font-weight: 600; }
+.cal-pill { width: 100%; min-height: 24px; padding: 2px 6px; border: 0; border-radius: 4px; background: var(--tint); color: var(--ink); font-size: 12px; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+.cal-pill .cal-ms { width: 6px; height: 6px; margin-right: 6px; vertical-align: 1px; }
+.cal-pill.ms { background: #e3ebe6; color: var(--accent); font-weight: 600; }
+.cal-more { align-self: flex-start; min-height: 22px; padding: 0 6px; border: 0; background: transparent; color: var(--muted); font-size: 12px; }
+.cal-month .cal-entries { max-width: 640px; }
