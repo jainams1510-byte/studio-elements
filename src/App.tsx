@@ -78,7 +78,7 @@ export default function App() {
   else screen = <Today outbox={outbox} online={online} />
 
   const onLog = section === 'log'
-  const wide = section === 'project' && sub === 'timeline'
+  const wide = (section === 'project' && sub === 'timeline') || section === 'calendar'
   return (
     <div className={wide ? 'app wide' : 'app'}>
       {screen}

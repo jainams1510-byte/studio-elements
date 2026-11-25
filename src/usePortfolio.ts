@@ -2,6 +2,10 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { cacheGet, cacheSet } from './db'
 import {
   BRIEF_SELECT,
+  DECISION_SELECT,
+  PROCUREMENT_SELECT,
+  type Decision,
+  type ProcurementItem,
   FEE_SELECT,
   INVOICE_SELECT,
   RA_BILL_SELECT,
@@ -12,6 +16,7 @@ import {
   type RaBill,
   type Vendor,
 } from './domain'
+import { decisionDrafts, procurementDrafts } from './decisions/drafts'
 import { feeDrafts } from './fees/drafts'
 import { raBillDrafts } from './money/drafts'
 import { DRAWING_SELECT, todayLocal, type Drawing } from './drawings'
@@ -32,6 +37,8 @@ type Raw = {
   invoices: FeeInvoice[]
   fees: ProjectFee[]
   briefs: ProjectBrief[]
+  decisions: Decision[]
+  procurement: ProcurementItem[]
 }
 
 type Result = { data: unknown; error: unknown }
@@ -63,6 +70,8 @@ export function usePortfolio(): Portfolio {
       invoices: supabase.from('fee_invoices').select(INVOICE_SELECT).is('removed_at', null),
       fees: supabase.from('project_fees').select(FEE_SELECT),
       briefs: supabase.from('project_briefs').select(BRIEF_SELECT),
+      decisions: supabase.from('decisions').select(DECISION_SELECT).is('removed_at', null),
+      procurement: supabase.from('procurement_items').select(PROCUREMENT_SELECT).is('removed_at', null),
     }
     const keys = Object.keys(parts) as (keyof Raw)[]
     const results = (await Promise.all(keys.map((k) => parts[k]))) as Result[]
@@ -110,6 +119,9 @@ export function usePortfolio(): Portfolio {
   const drafts = useMemo(() => {
     const live = projects.filter((p) => !p.archived)
     const r = raw ?? withDefaults({})
+    // Forecast starts were already worked out for each project's status; reuse them.
+    const taskStarts: Record<string, string> = {}
+    for (const st of states) for (const [id, pl] of Object.entries(st.result?.tasks ?? {})) taskStarts[id] = pl.start
     return [
       ...buildDrafts(states, today),
       ...raBillDrafts({ projects: live, bills: r.bills, vendors: r.vendors, today }),
@@ -121,6 +133,8 @@ export function usePortfolio(): Portfolio {
         doneTaskIds: new Set(r.tasks.filter((t) => t.status === 'done').map((t) => t.id)),
         today,
       }),
+      ...decisionDrafts({ today, projects: live, decisions: r.decisions }),
+      ...procurementDrafts({ today, projects: live, items: r.procurement, vendors: r.vendors, tasks: r.tasks, taskStarts }),
     ]
   }, [states, today, raw, projects])
 
@@ -138,6 +152,8 @@ function withDefaults(c: Partial<Raw>): Raw {
     invoices: c.invoices ?? [],
     fees: c.fees ?? [],
     briefs: c.briefs ?? [],
+    decisions: c.decisions ?? [],
+    procurement: c.procurement ?? [],
   }
 }
 
