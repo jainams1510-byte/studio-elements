@@ -1,5 +1,6 @@
 import { go } from '../hooks'
 import { isOwner, useTeam } from '../team'
+import { APP_VERSION, BUILD_TIME, applyUpdate } from '../update'
 import BackupCard from './BackupCard'
 
 type Entry = { path: string; title: string; text: string; owner?: boolean }
@@ -33,6 +34,13 @@ export default function Studio() {
         ))}
       </ul>
       {owner && <BackupCard />}
+      <p className="muted small app-version">
+        App version {APP_VERSION}, built{' '}
+        {new Date(BUILD_TIME).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Kolkata' })}.{' '}
+        <button type="button" className="link" onClick={applyUpdate}>
+          Reload to check for updates
+        </button>
+      </p>
     </main>
   )
 }

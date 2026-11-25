@@ -1,12 +1,31 @@
+import { execSync } from 'node:child_process'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 import { defineConfig } from 'vitest/config'
 
+// Which build is running, shown in Studio. Cloudflare's build sets WORKERS_CI_COMMIT_SHA; locally git knows.
+function commit(): string {
+  const env = process.env.WORKERS_CI_COMMIT_SHA || process.env.CF_PAGES_COMMIT_SHA
+  if (env) return env.slice(0, 7)
+  try {
+    return execSync('git rev-parse --short HEAD').toString().trim()
+  } catch {
+    return 'local'
+  }
+}
+
 export default defineConfig({
+  define: {
+    __APP_VERSION__: JSON.stringify(commit()),
+    __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
+  },
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      // The app registers the service worker itself (src/update.ts) and decides when to switch versions,
+      // so an update never reloads the page while someone is halfway through a log.
+      registerType: 'prompt',
+      injectRegister: false,
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       manifest: {
         name: 'Studio Elements',
@@ -25,6 +44,8 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+        clientsClaim: true,
+        cleanupOutdatedCaches: true,
       },
     }),
   ],

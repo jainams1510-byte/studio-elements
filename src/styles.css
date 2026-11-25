@@ -253,3 +253,8 @@ img, svg, video { max-width: 100%; }
 .tabs.scroll-tabs[data-left='more'][data-right='more'] { -webkit-mask-image: linear-gradient(to right, transparent, #000 40px, #000 calc(100% - 40px), transparent); mask-image: linear-gradient(to right, transparent, #000 40px, #000 calc(100% - 40px), transparent); }
 .tabs.scroll-tabs button { flex: none; padding: 0 14px; white-space: nowrap; }
 .tabbar .tab { min-width: 0; flex: 1; padding: 0 2px; }
+
+/* New-version banner */
+.update-banner { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 16px; padding: 10px 14px; border: 1px solid var(--accent); border-radius: 12px; background: #fff; font-size: 15px; }
+.update-banner .pill { flex: none; min-height: 40px; }
+.app-version { margin-top: 24px; }

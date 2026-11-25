@@ -101,8 +101,7 @@ export default function ReviewTab({ projectId }: { projectId: string }) {
         ))}
       </ul>
       <p className="muted small">
-        Reference note: the proposal’s reference text called Studio Elements Mumbai-based and left “[City]” for jurisdiction. Review every
-        export before sending; nothing is sent from the app.
+        Review every export before sending; nothing is sent from the app.
       </p>
     </section>
   )

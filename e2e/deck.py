@@ -41,10 +41,13 @@ LOGO = make_png("logo.png")
 
 
 def seed(store):
+    # Start from the original Project Studio wording (Mumbai, [City]) saved as edits, so flagging and fixing are tested.
+    OLD_CLAUSES = {"about": "Studio Elements is a multidisciplinary design practice based in Mumbai, India.",
+                   "dispute": "This Agreement shall be governed by the laws of India. The courts of [City] shall have exclusive jurisdiction."}
     # The stand-in matches filters as text, so the single settings row is keyed "1" to match ?id=eq.1.
     store.table("studio_settings")["1"] = {"id": "1", "name": "Studio Elements", "tagline": "Architecture · Interior Design · Project Management",
                                            "website": "www.studioelements.in", "email": "info@studioelements.in", "phone": "+91 8511357002",
-                                           "gstin": "", "logo_path": None, "clauses": {}}
+                                           "gstin": "", "logo_path": None, "clauses": OLD_CLAUSES}
     store.table("boq_items")["b1"] = {"id": "b1", "project_id": PROJECT, "category": "Flooring and skirting", "trade": None, "room": "Living",
                                       "item": "Italian marble flooring", "unit": "sq. ft.", "quantity": 400, "rate": 0, "wastage_pct": 5,
                                       "rate_source": "", "verified": False, "optional": False, "work_order_id": None, "committed_rate": None,

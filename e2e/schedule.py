@@ -52,6 +52,11 @@ with sync_playwright() as p:
     page.get_by_role("button", name="Save").click()
     expect(page.get_by_role("heading", name="Edit task")).to_have_count(0)
     exp2 = expected_finish(list(store.tasks.values()))
+    # The forecast redraws after the saved task comes back; wait for it rather than reading too early.
+    try:
+        expect(page.locator(".summary-row > div").first.locator("strong")).to_have_text(label(exp2), timeout=5000)
+    except AssertionError:
+        pass
     check("lengthening a critical task moves the finish", forecast_text(page) == label(exp2) and exp2 > exp,
           f"{label(exp)} -> {forecast_text(page)} (expected {label(exp2)})")
 

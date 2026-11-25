@@ -12,7 +12,12 @@ const goodBrief: Partial<ProjectBrief> = {
 }
 const fixedClauses = {
   about: 'Studio Elements is a multidisciplinary design practice based in Ahmedabad, India.',
-  dispute: REFERENCE_CLAUSES.dispute.replace('[City]', 'Ahmedabad'),
+  dispute: REFERENCE_CLAUSES.dispute,
+}
+// The wording of Jainam's original Project Studio, kept here so the checks are still exercised.
+const oldClauses = {
+  about: REFERENCE_CLAUSES.about.replace('Ahmedabad', 'Mumbai'),
+  dispute: REFERENCE_CLAUSES.dispute.replace('The courts of Ahmedabad', 'The courts of [City]'),
 }
 const proposal: FeeProposal = {
   project_id: 'p', method: 'fixed', fixed_fee: 100000, percent: null, rate_psf: null, stage_pct: [20, 30, 30, 20],
@@ -93,7 +98,7 @@ describe('reviewChecks', () => {
   })
 
   it('flags [City], Mumbai, no rooms and empty slots', () => {
-    const t = texts({ ...clean(), clauses: {}, project: { name: 'X', rooms: [] }, deck: null })
+    const t = texts({ ...clean(), clauses: oldClauses, project: { name: 'X', rooms: [] }, deck: null })
     expect(t.some((x) => x.startsWith('bad|settings|A clause still contains the placeholder [City]') && x.includes('13. DISPUTE RESOLUTION'))).toBe(true)
     expect(t.some((x) => x.startsWith('warn|settings|') && x.includes('Mumbai'))).toBe(true)
     expect(t).toContain('warn|edit|No rooms added, so no room slides will be made.')
@@ -114,6 +119,7 @@ describe('reviewChecks', () => {
 
   it('clause checks: an override replaces the reference text', () => {
     expect(clauseChecks(fixedClauses)).toEqual([])
+    expect(clauseChecks({})).toEqual([]) // the reference text itself now says Ahmedabad
     expect(clauseChecks({ about: 'Based in Mumbai.' , dispute: 'Courts of Ahmedabad.' }).map((c) => c.level)).toEqual(['warn'])
   })
 })
