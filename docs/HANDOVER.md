@@ -355,7 +355,7 @@ Every planned module is built and live. The work now is proving it with real dat
 - Calendar has a month view on desktop but no week view.
 - Drafts are English only.
 - AI line-item suggestions for the estimate were deferred.
-- Not yet done from earlier lists: display names for the two accounts; add Aggrawal Atelier with its rooms and sheets; drawing-issue acknowledgement and 48-hour reminder; "R1 replaces R0" draft and replace-print task; decision link on a schedule change reason; prompt to freeze the baseline when work orders exist.
+- Not yet done from earlier lists: display names for the two accounts; enter Aggrawal Atelier's sheets and schedule; drawing-issue acknowledgement and 48-hour reminder; "R1 replaces R0" draft and replace-print task; decision link on a schedule change reason; prompt to freeze the baseline when work orders exist.
 
 ### 11.4 Later
 - AI risk explanations (rules detect, AI only explains) and AI revision diffs (as a checklist).
