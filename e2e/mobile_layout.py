@@ -85,11 +85,19 @@ with sync_playwright() as p:
             check("project card shows status, progress and days to handover", ("At risk" in card or "Delayed" in card) and "% " in card.replace("\n", " ") and " d" in card,
                   card.replace("\n", " | "))
             check("activity feed lists the print issue", page.get_by_text("SE-EL-01 P1 issued to Site by Print on site").count() == 1)
+            # The phone's copy shows first and fresh data follows, so wait for loading to finish before counting.
+            page.wait_for_load_state("networkidle")
             tile = int(page.locator(".tile-k").first.locator("b").inner_text())
             page.locator(".tile-k").first.click()
             expect(page.get_by_role("heading", name="Drafts")).to_be_visible()
+            page.wait_for_load_state("networkidle")
             cards = page.locator("li.draft")
-            check("drafts tile count matches the drafts listed", cards.count() == tile and tile >= 3, f"{tile} vs {cards.count()}")
+            try:
+                expect(cards).to_have_count(tile, timeout=5000)
+            except AssertionError:
+                pass
+            listed = cards.count()
+            check("drafts tile count matches the drafts listed", listed == tile and tile >= 3, f"{tile} vs {listed}")
             kinds = page.locator("li.draft .tag").all_inner_texts()
             check("drafts include a site print note and internal reminders", "Site" in kinds and "Internal" in kinds, ", ".join(kinds))
             site = page.locator("li.draft", has_text="Replace print SE-EL-01")
