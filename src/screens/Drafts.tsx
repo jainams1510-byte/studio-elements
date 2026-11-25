@@ -21,7 +21,7 @@ export default function Drafts() {
           <h1>Drafts</h1>
         </div>
       </header>
-      <p className="muted small">Messages suggested by the schedule and drawing register. Nothing is sent from the app: check it, edit it, then share it yourself.</p>
+      <p className="muted small">Messages suggested by the schedule, the drawing register, agency bills and fee invoices. Nothing is sent from the app: check it, edit it, then share it yourself.</p>
       {offline && <p className="notice">No signal. Drafts are from the data last seen on this phone.</p>}
 
       <div className="chips" role="group" aria-label="Filter drafts">
