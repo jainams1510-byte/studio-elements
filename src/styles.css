@@ -248,5 +248,8 @@ img, svg, video { max-width: 100%; }
 /* Project sections scroll sideways on a phone (10 sections) */
 .tabs.scroll-tabs { overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
 .tabs.scroll-tabs::-webkit-scrollbar { display: none; }
+.tabs.scroll-tabs[data-right='more'] { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent); }
+.tabs.scroll-tabs[data-left='more'] { -webkit-mask-image: linear-gradient(to left, #000 calc(100% - 40px), transparent); mask-image: linear-gradient(to left, #000 calc(100% - 40px), transparent); }
+.tabs.scroll-tabs[data-left='more'][data-right='more'] { -webkit-mask-image: linear-gradient(to right, transparent, #000 40px, #000 calc(100% - 40px), transparent); mask-image: linear-gradient(to right, transparent, #000 40px, #000 calc(100% - 40px), transparent); }
 .tabs.scroll-tabs button { flex: none; padding: 0 14px; white-space: nowrap; }
 .tabbar .tab { min-width: 0; flex: 1; padding: 0 2px; }

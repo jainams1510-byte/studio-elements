@@ -32,3 +32,11 @@ describe('money formatting', () => {
     expect(areaSqft(1500, 'sq. ft.')).toBe(1500)
   })
 })
+
+describe('negative amounts', () => {
+  it('put the minus before the rupee sign', () => {
+    expect(inr(-173700)).toBe('−₹ 1,73,700')
+    expect(inrExact(-99.5)).toBe('−₹ 99.50')
+    expect(inr(-0.4)).toBe('₹ 0')
+  })
+})

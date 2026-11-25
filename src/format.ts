@@ -12,12 +12,14 @@ export function round2(v: number): number {
 
 /** ₹ 1,23,456 (no paise). */
 export function inr(v: number): string {
-  return '₹ ' + Math.round(v).toLocaleString('en-IN')
+  const r = Math.round(v)
+  return (r < 0 ? '−₹ ' : '₹ ') + Math.abs(r).toLocaleString('en-IN')
 }
 
 /** ₹ 1,23,456.50 (with paise), for invoices and bills. */
 export function inrExact(v: number): string {
-  return '₹ ' + round2(v).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  const r = round2(v)
+  return (r < 0 ? '−₹ ' : '₹ ') + Math.abs(r).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
 /** Short form for tiles and charts: ₹ 4.5 L, ₹ 1.2 Cr, ₹ 85 K. */

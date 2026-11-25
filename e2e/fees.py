@@ -29,13 +29,14 @@ def jround(x):
 
 
 def inr(v):
-    return "₹ " + group(jround(v))
+    r = jround(v)
+    return ("−₹ " if r < 0 else "₹ ") + group(abs(r))
 
 
 def inr_exact(v):
     whole = int(abs(v))
     paise = jround((abs(v) - whole) * 100)
-    return "₹ " + group(whole) + f".{paise:02d}"
+    return ("−₹ " if v < 0 and (whole or paise) else "₹ ") + group(whole) + f".{paise:02d}"
 
 
 def inr_short(v):

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { cacheGet } from '../db'
 import { go } from '../hooks'
 import { supabase } from '../supabase'
@@ -53,6 +53,14 @@ export default function ProjectPage({ projectId, tab }: { projectId: string; tab
     }
   }, [projectId])
 
+  // Fade whichever edge has more tabs hidden behind it, so the row reads as scrollable.
+  const tabsRef = useCallback((el: HTMLElement | null) => {
+    if (!el) return
+    markEdges(el)
+    const ro = new ResizeObserver(() => markEdges(el))
+    ro.observe(el)
+  }, [])
+
   return (
     <main className="screen">
       <header className="topbar">
@@ -73,7 +81,7 @@ export default function ProjectPage({ projectId, tab }: { projectId: string; tab
         </button>
       </header>
 
-      <nav className="tabs scroll-tabs" aria-label="Project sections">
+      <nav className="tabs scroll-tabs" aria-label="Project sections" ref={tabsRef} onScroll={(e) => markEdges(e.currentTarget)}>
         {PROJECT_TABS.filter(([id]) => id !== 'fees' || owner).map(([id, label]) => (
           <button
             key={id}
@@ -81,7 +89,7 @@ export default function ProjectPage({ projectId, tab }: { projectId: string; tab
             aria-current={tab === id ? 'page' : undefined}
             className={tab === id ? 'on' : ''}
             ref={(el) => {
-              if (el && tab === id) el.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+              if (el && tab === id) el.scrollIntoView({ block: 'nearest', inline: 'center' })
             }}
             onClick={() => go(id === 'logs' ? `/project/${projectId}` : `/project/${projectId}/${id}`)}
           >
@@ -102,4 +110,10 @@ export default function ProjectPage({ projectId, tab }: { projectId: string; tab
       {tab === 'review' && <ReviewTab projectId={projectId} />}
     </main>
   )
+}
+
+function markEdges(el: HTMLElement): void {
+  const more = el.scrollWidth - el.clientWidth
+  el.dataset.left = el.scrollLeft > 4 ? 'more' : ''
+  el.dataset.right = more - el.scrollLeft > 4 ? 'more' : ''
 }
