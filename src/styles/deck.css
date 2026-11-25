@@ -1,1 +1,61 @@
 /* Styles for the deck module. Keep to the design tokens in styles.css. */
+
+/* Section headings and groups */
+.dk-head { display: flex; flex-direction: column; gap: 4px; }
+.dk-title { margin: 0; font-size: 18px; font-weight: 600; color: var(--ink); letter-spacing: -0.005em; }
+.dk-brief { padding-top: 22px; border-top: 1px solid var(--line); }
+.dk-group { margin: 0; min-width: 0; gap: 14px; }
+.dk-legend { float: left; width: 100%; margin-bottom: 2px; padding: 0; font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.dk-legend + * { clear: both; }
+.field small { line-height: 1.35; }
+.dk-inline { margin-top: -6px; padding: 8px 10px; border-left: 3px solid #b8892a; background: #f6efe0; border-radius: 0 6px 6px 0; font-size: 13px; }
+.dk-inline.bad { border-left-color: var(--danger); background: #f6e7e3; color: var(--danger); }
+
+/* Checks (review and clause warnings) */
+.dk-checks { display: flex; flex-direction: column; gap: 8px; }
+.dk-check { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; border: 1px solid var(--line); border-left: 3px solid #b8892a; border-radius: 6px; background: var(--surface); font-size: 14px; }
+.dk-check.bad { border-left-color: var(--danger); }
+.dk-check.ok { border-left-color: var(--accent); font-weight: 500; }
+.dk-check.note { border-left-color: var(--line); color: var(--muted); background: transparent; }
+.dk-check-text { min-width: 0; overflow-wrap: anywhere; }
+.dk-fix { flex: none; font-size: 13px; white-space: nowrap; }
+
+/* Studio settings */
+.dk-logo { display: flex; align-items: center; justify-content: center; gap: 12px; height: 120px; border-radius: 6px; background: #e0d8c9; }
+.dk-logo img { max-height: 72px; max-width: 45%; object-fit: contain; }
+.dk-logo-name { color: #80786a; font-family: 'Century Gothic', 'Avenir Next', Futura, sans-serif; font-size: 14px; line-height: 1.25; }
+.dk-filebtn, .dk-file { position: relative; display: inline-flex; align-items: center; justify-content: center; text-align: center; cursor: pointer; }
+.dk-filebtn:focus-within, .dk-file:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+.dk-filebtn.busy, .dk-file.busy { opacity: 0.6; }
+.dk-clause textarea { font-size: 16px; line-height: 1.5; }
+.dk-clause textarea[readonly] { background: var(--ground); }
+.dk-clause .button-row > * { min-height: 48px; font-size: 14px; padding: 0 8px; }
+.dk-clause .card-head { align-items: flex-start; }
+
+/* Deck builder */
+.dk-slides { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
+.dk-slide { gap: 10px; }
+.dk-slide-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.dk-tools { display: flex; gap: 4px; }
+.dk-icon { width: 44px; height: 44px; flex: none; border: 1px solid var(--line); border-radius: 22px; background: transparent; font-size: 18px; line-height: 1; display: inline-flex; align-items: center; justify-content: center; }
+.dk-title-input { min-height: 48px; width: 100%; padding: 0 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); font-size: 16px; font-weight: 500; }
+.dk-slots { display: flex; flex-wrap: wrap; gap: 8px; }
+.dk-slotctl { display: flex; align-items: center; gap: 4px; min-width: 0; }
+.dk-file { font-size: 13px; }
+.dk-undo { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.dk-undo .link { flex: none; }
+.dk-export .button-row > * { min-width: 0; }
+
+/* Slide preview: the deck's own look, scaled with container units. */
+.dk-pv { position: relative; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; container-type: inline-size; background: #e0d8c9; border: 1px solid #cfc5b2; border-radius: 2px; font-family: 'Century Gothic', 'Avenir Next', Futura, sans-serif; }
+.dk-pv > *, .dk-slotwrap > * { position: absolute; }
+.dk-slotwrap { display: contents; }
+.dk-pb { background: #7f6f54; }
+.dk-pt { display: flex; align-items: center; justify-content: flex-end; color: #fff; font-size: 2.5cqw; line-height: 1.1; white-space: nowrap; overflow: hidden; }
+.dk-pt span { overflow: hidden; text-overflow: ellipsis; }
+.dk-pl { display: flex; flex-direction: column; justify-content: center; color: #80786a; font-size: 1.45cqw; line-height: 1.25; }
+.dk-pc { display: flex; align-items: center; justify-content: center; color: #000; font-size: 1.9cqw; }
+.dk-ph { display: flex; align-items: center; justify-content: center; text-align: center; border: 1px dashed #b8ac96; color: #8a8070; font-size: 1.6cqw; }
+.dk-pv img.dk-pimg { object-fit: contain; max-width: none; }
+.dk-titlerow { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.dk-savestate { flex: none; }
