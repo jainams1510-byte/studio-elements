@@ -106,7 +106,7 @@ and `python3 e2e/smoke.py` (or `register.py`, `ai.py`) in another (needs Python 
 - Drafted messages are suggestions only: the app never sends anything. You edit, then share or copy.
 - Fees, fee invoices, studio costs, margins and opening cash are visible to owners only; the database returns nothing
   to anyone else. Estimates, bills, vendors, decisions and procurement are shared with the team.
-- Only an owner can move an RA bill back a step or change a certified amount; bill lines lock once certified.
+- Only an owner can move an RA bill back a step, change a certified amount or edit lines of a certified bill.
 - A decision with a cost impact creates one proposed variation. An estimate line more than 5% over budget is flagged
   until a variation is linked.
 - Agency payments are tracked, never made, from the app. Exports are marked DRAFT; check invoices with your CA.
