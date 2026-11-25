@@ -8,6 +8,12 @@ the schedule (tasks, "After" links, stage templates, our own critical path, base
 desktop timeline, phone timeline) and an owner-only backup download, plus a studio overview: status per project
 (on track / at risk / delayed), progress against plan, days to handover, a handover chart, drafted messages to
 share yourself, team workload and a latest-activity feed.
+Part 6 adds per project an estimate/BOQ with a budget ledger, quotes and work orders, agency RA bills, variations and a
+client budget report (XLSX, CSV, PDF); owner-only fees (proposal as DOCX/PDF, milestone invoices, studio costs and
+margin); decisions (RFIs, approvals, site instructions, design revisions); procurement with order-by dates; a client
+brief; a presentation deck (PPTX/PDF); and a review before export. Studio-wide: finances with an 8-week cash-flow
+forecast (owners), a vendor directory, a calendar of everything dated (with an .ics download) and studio settings
+(logo, contract clauses). Drafted reminders for bills, fee invoices, approvals and orders join the Drafts outbox.
 
 ## What is in here
 
@@ -37,6 +43,10 @@ share yourself, team workload and a latest-activity feed.
 | `e2e/register.py` | Browser test of project editing and the drawing register, mocked server |
 | `e2e/ai.py` | Browser test of the review queue and weekly reports, mocked server and AI |
 | `e2e/logs.py` | Browser test of owners editing, removing and restoring logs, mocked server |
+| `supabase/006_money_decisions_procurement.sql` | Database part 6: money, fees, vendors, decisions, procurement, brief, deck, settings, and their rules |
+| `supabase/tests/006_money_rules.sql` | Live rule checks for part 6 (always rolls back) |
+| `src/money/`, `src/fees/`, `src/decisions/`, `src/deck/` | Logic for part 6 (screens are in `src/screens/` under the same names) |
+| `e2e/money.py`, `fees.py`, `decisions.py`, `deck.py` | Browser tests for part 6 (set `APP_URL=http://localhost:4173/`) |
 | `scripts/restore_check.py` | Checks a backup (every table, links, files) and writes a one-step restore SQL |
 | `scripts/drill/run_drill.sh` | Restore drill: build a database from the setup files, fill it, back up, restore, compare |
 | `.env` | Supabase address and public key (public by design) |
@@ -94,6 +104,12 @@ and `python3 e2e/smoke.py` (or `register.py`, `ai.py`) in another (needs Python 
   unfrozen. After the freeze, any change to a duration, a link, a task's existence or the calendar needs a reason,
   and the database writes it to the change log.
 - Drafted messages are suggestions only: the app never sends anything. You edit, then share or copy.
+- Fees, fee invoices, studio costs, margins and opening cash are visible to owners only; the database returns nothing
+  to anyone else. Estimates, bills, vendors, decisions and procurement are shared with the team.
+- Only an owner can move an RA bill back a step or change a certified amount; bill lines lock once certified.
+- A decision with a cost impact creates one proposed variation. An estimate line more than 5% over budget is flagged
+  until a variation is linked.
+- Agency payments are tracked, never made, from the app. Exports are marked DRAFT; check invoices with your CA.
 - Every screen must fit a 360 px phone without sideways scrolling, and text boxes stay at 16 px so iPhones do not zoom.
 - Weekly reports use typed notes and verified voice summaries only. An approved report is never
   overwritten by a new draft, and nothing is sent from the app: you share it yourself.

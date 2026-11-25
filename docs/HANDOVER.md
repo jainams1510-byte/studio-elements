@@ -1,6 +1,6 @@
 # Studio Elements project tool: handover
 
-Everything needed to continue building this project in a new chat. Written 23 Nov 2026; updated the same day after Schedule part 1, the backup download, the phone-layout fixes and the studio overview went live.
+Everything needed to continue building this project in a new chat. Written 23 Nov 2026; updated 25 Nov 2026 after part 6 went live: money, fees and finances, vendors, decisions, procurement, calendar, brief, presentation deck, review before export and studio settings, plus the restore drill and access tests.
 
 ---
 
@@ -11,7 +11,7 @@ You are continuing a build that is already live and in use. Before changing anyt
 1. **Get the code.** It is in the GitHub repository `jainams1510-byte/studio-elements`, branch `main`. Attach it to the session and clone it. Every push to `main` deploys automatically to Cloudflare Pages.
 2. **Connect the services.** The Supabase project is `obwkpheueqecifmeaqyc` (Mumbai). Use the Supabase connector for SQL, migrations, edge functions and security advisors.
 3. **Read sections 2, 6 and 9 before writing code.** Section 2 covers the rules Jainam set. Section 6 covers how the database is protected. Section 9 lists traps already hit.
-4. **Next job:** see section 11, "What to build next". **Schedule part 2** (calendar view, procurement order-by dates, drafted notes), then **Money**. Several smaller items are also pending; see 11.1.
+4. **Next job:** every planned module is now built. What remains is proving it on site: phone checks (section 11.1), Jainam's answers to the choices in 11.2, then the items in 11.3.
 5. **Work the way Jainam asked:**
    - Plan briefly, then build.
    - Test for real before saying anything works.
@@ -79,13 +79,15 @@ The companion file `Studio PM tool build routes.md` is the sourced research repo
 | Drawing register (sheets, P/R revisions, issues, site print photo, out-of-date flags) | **Done.** Phone check passed 22 Nov. |
 | AI: transcripts, two-person review queue, weekly report drafts | **Live 22 Nov** (`cf36bb9`). Database rules tested live. Browser-tested with a stand-in. **A real transcription and real report draft have not been run yet.** |
 | Owner edit / remove / restore of site logs and photos | **Live 23 Nov** (`b0cb21e`). 15 rule checks passed on the live database. Browser-tested with a stand-in. **Not yet tried on a phone.** |
-| Decisions and variations | Not started |
-| Procurement (order-by dates) | Not started |
-| Schedule part 1: tasks, After links, templates, critical path, baseline + change log, phone tab, desktop timeline, Today risks | **Live 23 Nov.** 23 live rule checks passed; 50 unit tests; browser test 33/33 with a stand-in. **Not yet tried on a phone or with real tasks.** Template durations are placeholders. |
-| Phone layout fixes + studio overview (from Jainam's earlier "Studio Dashboard" prototype): status per project, progress vs plan, days to handover, handover chart, Drafts outbox, Team workload, activity feed | **Live 23 Nov.** Phone-layout test 81/81 at 360 and 390 px; 58 unit tests. Phone checks of steps 1–5 passed (Jainam, 23 Nov). **Overview not yet tried on a phone.** |
-| Schedule part 2: calendar view, procurement, order-by drafts | Not started (**next**) |
-| Money (budget, RA bills, fee invoices) | Not started |
-| Hardening | **Backup download live 23 Nov** (owner-only ZIP: all tables + media; backup log; "Backup due" on Today after 7 days). Restore drill and access test suite not started. **Make the first backup now.** |
+| Schedule part 1: tasks, After links, templates, critical path, baseline + change log, phone tab, desktop timeline, Today risks | **Live 23 Nov.** 23 live rule checks passed; browser test 33/33 with a stand-in. **Not yet tried on a phone or with real tasks.** Template durations are placeholders. |
+| Phone layout fixes + studio overview (from Jainam's earlier "Studio Dashboard" prototype): status per project, progress vs plan, days to handover, handover chart, Drafts outbox, Team workload, activity feed | **Live 23 Nov.** Phone checks of steps 1–5 passed (Jainam, 23 Nov). **Overview not yet tried on a phone.** |
+| Database part 6 (18 tables: vendors, briefs, BOQ, quotes, work orders, RA bills and lines, fees, proposals, invoices, studio costs, settings, decisions, variations, procurement, site visits, decks) | **Live 25 Nov** (three migrations `money_part1_tables`, `money_part2_rules`, `money_part3_access`). 27 live rule checks passed. |
+| Money tab: estimate/BOQ (22 categories, wastage, contingency, GST, budget check), ledger (budget, committed, certified, paid, 5% overrun flag), quotes → work orders, RA bills (submitted → paid, coordinator lock after certification), variations, client report; XLSX, CSV, client PDF | **Live 25 Nov** (`b621bbf`). Browser test 96/96; totals match hand-worked figures. **Not yet tried on a phone or the live database.** |
+| Fees tab (owners): proposal (fixed, % of budget, per sq ft; stages, milestones, GST, amount in words; DOCX and PDF), invoices (from milestones, raise/paid/undo, overdue, invoice PDF marked "check with your CA"), studio costs and margin. **Finances** (owners): KPIs, receivables, payables, margin by project, 8-week cash-flow forecast. **Vendors** (team): directory, totals, on-time %, Call/WhatsApp links | **Live 25 Nov** (`a1a1ef8`). Browser test 107/107. **Not yet tried on a phone.** |
+| Decisions (RFI, approval, site instruction, design revision; cost impact → variation; WhatsApp confirmation draft), Procurement (order-by from the task's forecast start minus lead days; flags; order reminders), Calendar (8 entry types, phone agenda, desktop month, .ics download) | **Live 25 Nov** (`37c21d2`). Browser test 114/114. **Not yet tried on a phone.** |
+| Brief (client, site, dates, budget and tax), Studio settings (details, logo, 14 contract clauses), presentation Deck (slides from rooms, images, PPTX and PDF), Review before export | **Live 25 Nov** (`06d15bc`). Browser test 92/92. **Not yet tried on a phone.** |
+| Drafts outbox now also drafts: unpaid client-approved agency bills (7 days), overdue fee invoices (3 and 10 days), invoice-to-raise prompts, overdue approvals, decision confirmations, orders due within 7 days | **Live 25 Nov.** |
+| Hardening | **Backup download live 23 Nov.** **Restore drill done 25 Nov:** backup → restore → all 32 tables identical; `scripts/restore_check.py` checks a backup ZIP. **Access test done 25 Nov:** 367 checks, every table as signed-out, stranger, coordinator and owner. **Security fingerprint** of live matches the setup files (270 items, `7e11a20f…`). Main bundle 380 kB (the new screens load on first open). |
 
 The original "one week" sprint (14–20 Nov) slipped. Rule: each module ends with a phone check. If it fails, dates shift and nothing is skipped. "Complete" means two weeks of real logs with no lost entry.
 
@@ -93,7 +95,7 @@ The original "one week" sprint (14–20 Nov) slipped. Rule: each module ends wit
 
 ## 4. What is live, screen by screen
 
-Hash routes: `#/` Today, `#/log`, `#/projects`, `#/project/:id` (tabs: Site logs, Drawings, Schedule, Reports), `#/project/:id/drawings`, `#/project/:id/schedule`, `#/project/:id/reports`, `#/project/:id/timeline` (full width), `#/project/:id/edit`, `#/drawing/:id`, `#/review`, `#/drafts`, `#/team`. Tab bar: **Today · Review · + · Projects**.
+Hash routes: `#/` Today, `#/log`, `#/projects`, `#/project/:id` (tabs: Site logs, Drawings, Schedule, Money, Fees (owners), Decisions, Procurement, Deck, Reports, Review), `#/project/:id/<tab>`, `#/project/:id/timeline` (full width), `#/project/:id/edit` (with the Brief), `#/drawing/:id`, `#/review`, `#/drafts`, `#/team`, `#/studio`, `#/finances`, `#/vendors`, `#/calendar` (full width), `#/settings`. Tab bar: **Today · Review · + · Projects · Studio**. The project tab row scrolls sideways; the edge fades where more tabs are hidden.
 
 - **Sign in:** email and password. Accounts are created by hand in Supabase (Authentication > Users > auto-confirm). New sign-ups should be switched off.
 - **Today:**
@@ -120,6 +122,17 @@ Hash routes: `#/` Today, `#/log`, `#/projects`, `#/project/:id` (tabs: Site logs
     - This week or last week; client language (English, Hindi, Gujarati).
     - Draft reports, edit, Approve, Share (phone share sheet or copy).
     - Editing an approved report puts it back to draft. Approved reports are never overwritten by a new draft.
+  - **Money tab:** Estimate (lines by category with room, trade, unit, qty, rate, wastage %, rate source, verified tick, optional; contingency and GST inline; budget and area; ledger by category; exports XLSX with formulas, CSV, client PDF with tick-box columns) · Quotes & orders (quote statuses, lowest flag, accept → work order, link BOQ lines at a committed rate) · Bills (RA bill per vendor, lines against BOQ items, step strip submitted → measured → certified → client approved → paid; owners only step back or change a certified amount) · Variations · Client report (read-only text; Share, Copy, PDF).
+  - **Fees tab (owners only):** tiles (agreed, received, raised unpaid, margin), Proposal, Invoices, Costs and margin. Everything is "before GST" except invoice totals and cash flow, which include GST; the screens say so.
+  - **Decisions tab:** kind and status filters; need-by, blocks, links, cost impact with variation status; answer required before answered/confirmed; drafted client reminder (overdue approval) and WhatsApp-group confirmation (confirmed decision).
+  - **Procurement tab:** "Material not on site" list; items sorted by order-by; vendor pick or add inline; flags Order by / Order overdue / Delivery late / Not in time; drafted order reminder.
+  - **Deck tab:** 16:9 slides (as built, key plan, a slide per room, thank you), titles, order, images per slot, Rebuild from rooms (keeps images by room name), PPTX (editable) and PDF named `<Project>-Presentation`.
+  - **Review tab:** problems first, then items to check: missing brief fields, unpriced or unverified lines, over budget, fee proposal problems (owners), unreviewed clauses, "[City]" or "Mumbai" left in clauses, empty image slots. Each links to the screen that fixes it.
+- **Studio (`#/studio`):** links to Finances, Vendors, Calendar, Settings, plus the Backup card.
+- **Finances (`#/finances`, owners):** KPI tiles, receivables, payables (planned studio costs), agency bills awaiting the client's payment (labelled not studio money), margin by project (red under 10%), 8-week cash-flow forecast from an editable opening cash, flagged negative weeks.
+- **Vendors (`#/vendors`):** search, kind chips, archived (owners archive/restore), per-vendor projects, work orders, certified, paid, unpaid approved bills, quotes, on-time %, Call and WhatsApp.
+- **Calendar (`#/calendar`):** milestones, orders, sheets, site visits, fee invoices, bill payments, decisions, weekly reports. Phone: agenda from today grouped by week, "Past 7 days" toggle. 900 px and wider: month grid, Monday first. Type and project filters; tap opens the source. Site visits added here. "Add to phone calendar" saves an .ics of the next 90 days.
+- **Settings (`#/settings`):** studio details, GSTIN, logo (PNG; "Use original logo"), 14 clauses each editable with "Reset to reference text". Coordinator sees it read-only.
 - **Drawing detail:**
   - New revision: code suggestions P1→P2… and R0→R1…; a P after R is refused.
   - Record an issue: to whom, method, date, optional site print photo.
@@ -160,8 +173,9 @@ Migrations applied, in order:
 5. `ai_layer` (22 Nov)
 6. `log_edit_remove` (23 Nov)
 7. `schedule_backup_log` (23 Nov)
+8. `money_part1_tables`, `money_part2_rules`, `money_part3_access` (25 Nov; the combined re-runnable file is `supabase/006_money_decisions_procurement.sql`)
 
-Repository files `supabase/001` to `005` match the live database. `supabase/tests/005_schedule_rules.sql` is the live rule check for part 5 (always rolls back).
+Repository files `supabase/001` to `006` match the live database: the security fingerprint (`scripts/drill/fingerprint.sql`) gives the same hash on live and on a database built from the files. `supabase/tests/005_schedule_rules.sql` and `006_money_rules.sql` are the live rule checks (always roll back).
 
 ### Tables
 | Table | Key columns |
@@ -180,6 +194,15 @@ Repository files `supabase/001` to `005` match the live database. `supabase/test
 | tasks | id (made by the app), project_id, stage, name, trade, room, owner_name, duration (working days), milestone, after_ids uuid[] (finish-to-start), status planned/in_progress/done/blocked, actual_start/end, gate_drawing_id, baseline_start/end, sort_order, template_key, change_reason (write-only), removed_at/by |
 | schedule_changes | project_id, task_id (not an FK), kind added/changed/removed/restored/baseline/rebaseline/calendar, before, after, reason, decision_id (for later), changed_by/at. Read-only to the app |
 | backup_log | made_at, made_by, summary, files, missing. Insert by owners only (summary, files, missing columns) |
+| vendors | name (unique ignoring case and outer spaces), kind agency/supplier/consultant, trade, contact, phone, email, gstin, archived (owner-only) |
+| project_briefs | project_id PK, client_name/phone/email, site_address, city, typology, area + area_unit, issue/agreement/start/end dates, duration_months, client_budget, budget_includes_gst, estimate_gst_rate, contingency_pct, estimate_pdf (saved tick-box choices) |
+| boq_items | project, category, trade, room, item, unit, quantity, rate, wastage_pct, rate_source, verified, optional, work_order_id, committed_rate, removed_at |
+| quotes / work_orders | quote: vendor, trade, amount, status received/compared/accepted/rejected. Work order: vendor, quote, trade, amount, issued_on (tracked, not issued from the app) |
+| ra_bills / ra_bill_lines | bill: vendor, work order, bill_no (unique per project and vendor), claimed, certified, gst_rate, status, dates and paid_amount stamped by `ra_bill_rules`. Lines: boq item, claimed and certified qty, rate (filled from the committed rate); locked after certification |
+| project_fees, fee_proposals, fee_invoices, studio_costs, studio_private | **Owner-only** (row policies use `is_owner`). Invoice dates and paid_amount stamped by `fee_invoice_rules` |
+| studio_settings | single row id 1: name, tagline, phone, email, website, gstin, logo_path, clauses jsonb. Team reads, owners update |
+| decisions / variations | decision: kind rfi/approval/site_instruction/revision, question, answer, need_by, blocks, links, cost_impact, status; a cost impact creates one proposed variation. Variation: proposed → costed → client approved → executed → billed |
+| procurement_items, site_visits, project_decks | procurement: item, task, need_by, lead_days, vendor, status specified → approved → ordered → on site, dates. Decks: slides jsonb, key_plan_path |
 
 Stages: 1 Concept, 2 Design development, 3 Working drawings, 4 BOQ and tendering, 5 Procurement, 6 Execution, 7 Snagging, 8 Handover.
 
@@ -217,11 +240,18 @@ A summary is verified when two different people confirm it and at least one is `
 | `templates.ts` | Stage templates (8 stages, exit-gate milestones, placeholder durations) and `templateRows(project, fromStage)`. |
 | `useSchedule.ts` | Loads and caches a schedule; `gateFlag` (sheet not at R within 7 days or started); `projectRisk` for Today (milestone > 7 working days late, overdue, gates, blocked, loops). |
 | `portfolio.ts` | `projectState` (health ok/risk/late/none, progress by working days done, plan from baseline, finish, days left, reasons), `buildDrafts`, `teamLoad`. |
-| `usePortfolio.ts` | Loads schedules, tasks and drawings for all projects (each part independently; cached); handled-draft memory. |
-| `backup.ts` | Backup ZIP (`data.json` of all 14 tables + `media/`), backup log, file save (share sheet on iPhone home-screen app). |
+| `usePortfolio.ts` | Loads schedules, tasks, drawings, client-approved bills, vendors, fee data (owners), briefs, decisions and procurement for all projects (each part independently; cached); combines every drafts source; handled-draft memory. |
+| `backup.ts` | Backup ZIP (`data.json` of all 32 tables + `media/`), backup log, file save (share sheet on iPhone home-screen app). |
 | `ai.ts` | Loads voice logs with AI rows; review insert-then-update; edit summary. |
 | `media.ts` | Photo compression, audio recording. |
 | `db.ts` | IndexedDB (idb): outbox and cache. |
+| `domain.ts`, `format.ts` | Part-6 constants, row types and select strings; rupee formatting (Indian grouping, minus before ₹, L/Cr/K, amount in words) |
+| `estimate.ts`, `feeMath.ts`, `clauses.ts` | Estimate totals; fee totals, stage and milestone amounts; the 14 reference clauses from Jainam's Project Studio |
+| `money/` | Ledger, quotes, bills, BOQ, CSV, XLSX, client PDF, client report, `raBillDrafts`, `useMoney` |
+| `fees/` | Invoices, margin and cash flow, vendors, proposal blocks, DOCX/PDF exports, `feeDrafts` |
+| `decisions/` | Decision and procurement logic, `decisionDrafts`, `procurementDrafts`, data loading |
+| `deck/` | Slide geometry and defaults, brief checks, review checks, PPTX/PDF export, images |
+| `screens/money, fees, decisions, deck` | The new tabs and studio screens (loaded on first open) |
 | `screens/*` | Today, Drafts, Team, PortfolioParts (status tag, progress bar, project card, handover chart), NewLog, Projects, BackupCard, ProjectPage, LogList, DrawingList, DrawingDetail, EditProject, ScheduleTab, TaskEditor, Timeline, Review, Reports, SignIn. |
 | `supabase/functions/ai/index.ts` | `health`, `transcribe {log_id, force?}`, `weekly_report {project_id, week_start, language}` (details below). |
 
@@ -238,7 +268,7 @@ Stack versions: React 19, Vite 8, TypeScript 7, vite-plugin-pwa 2, supabase-js 2
 
 ## 8. How to test and deploy
 
-- `npm test`: 58 unit tests (queue, transcript requests, drawing rules, review rules, calendar and critical path, templates, risks, backup, portfolio).
+- `npm test`: 176 unit tests in 15 files (adds estimate and fee maths, money, fees, decisions, deck, formatting).
 - Browser tests share the stand-in server in `e2e/standin.py`.
 - Browser tests: run `npm run build`, then `npx vite preview --port 4173 --strictPort`, then `python3 e2e/<name>.py`. They need Playwright, Pillow and Chrome at `/usr/bin/google-chrome`. Each uses a stand-in Supabase in memory and never touches real data.
 
@@ -250,13 +280,20 @@ Stack versions: React 19, Vite 8, TypeScript 7, vite-plugin-pwa 2, supabase-js 2
   | `logs.py` | 10 | Owner edit, remove, restore |
   | `mobile_layout.py` | 81 | Every screen at 360 and 390 px fits, text boxes ≥ 16 px, timeline swipes and opens at today, drafts and team flows |
   | `schedule.py` | 33 | Schedule setup, critical path vs an independent count, edits, loops, freeze, reasons, flags, timeline, coordinator limits, backup ZIP |
+  | `money.py` | 96 | Estimate vs hand-worked totals, ledger and overrun flag, exports, quotes → work orders, RA bills, coordinator lock, variations, client report, offline |
+  | `fees.py` | 107 | Proposal, invoices, costs and margin, finances, cash flow, vendors, owner-only screens |
+  | `decisions.py` | 114 | Decisions, procurement order-by vs an independent count, calendar (8 types, agenda, month, .ics) |
+  | `deck.py` | 92 | Brief, settings, logo, clauses, deck build and exports, review checks |
+
+  `money.py`, `fees.py`, `decisions.py` and `deck.py` default to ports 4181–4184; set `APP_URL=http://localhost:4173/` to run them against the usual preview.
+- **Restore drill and access test (scratch database, needs PostgreSQL 16):** `bash scripts/drill/run_drill.sh` builds a database from `supabase/001`–`006`, fills every table through the app's rules, backs it up, restores into an empty database, compares all 32 tables, runs `access_check.py` (367 checks with controls) and prints the security fingerprint. Run `scripts/drill/fingerprint.sql` on live: the hash must match.
 - **Live database rule tests:** run as a `DO` block that impersonates a user and ends in `raise exception 'RESULTS: …'`, so everything rolls back.
   - Set `request.jwt.claims` with `set_config(..., true)` and `execute 'set local role authenticated'`.
-  - Results so far: 11 core, 12 register, 15 AI layer, 15 log-edit and 23 schedule checks, all passed.
+  - Results so far: 11 core, 12 register, 15 AI layer, 15 log-edit, 23 schedule and 27 part-6 checks, all passed.
   - Creating test users in `auth.users` from Claude is **blocked by the permission system**; use Jainam's real two user ids inside rolled-back transactions.
 - Edge function check: `npx -y deno check --no-lock index.ts`.
 - **Deploy order matters:** database migration first, then the edge function, then push the app. New app code that reads new columns breaks if pushed before the migration.
-- Some Supabase migrations ask Jainam for confirmation in the Claude app. If unanswered within 2 minutes they time out and **nothing is applied**. Tell him, then retry when he says go.
+- Some Supabase migrations ask Jainam for confirmation in the Claude app. If unanswered within 2 minutes they time out and **nothing is applied**. Tell him, then retry when he says go. Large migrations, or ones containing `drop trigger`/`drop policy`, can be cancelled automatically in under a second: split them into parts and leave out drops on new tables.
 - After DDL changes, run the Supabase security advisor. The only known warning is "leaked password protection disabled", an auth setting that may need a paid plan.
 
 ---
@@ -274,6 +311,10 @@ Stack versions: React 19, Vite 8, TypeScript 7, vite-plugin-pwa 2, supabase-js 2
 - WebFetch to some sites needs approval that may go unanswered; use WebSearch instead.
 - Phone zoom-out: a grid `1fr` column cannot shrink below its content (long select options, iPhone date boxes). Use `minmax(0, 1fr)`; a sideways-scrolling child of a flex row needs `min-width: 0`. Text boxes under 16 px make iPhones zoom in. Run `e2e/mobile_layout.py` after any layout change.
 - Claude Code artifact links (claude.ai/code/artifact/…) cannot be read from here; ask for the HTML file.
+- `React.lazy` screens: give each `Suspense` a `key` (the tab or section). Without it, switching back before a new tab finishes loading keeps the old tab mounted and it never refetches.
+- The e2e stand-in runs no database triggers or access rules, compares filters as text (`?id=eq.1` misses a row stored with id 1) and mishandles multipart uploads and signed downloads; `deck.py` works around the last two. Rules must be tested on the live database or the drill database.
+- In psql-driven tests, read results from a tagged line (`'RESULT=' || …`). The last output line is `ROLLBACK`, which once made three access checks pass whatever happened.
+- `e2e/__pycache__` is ignored now; it used to be tracked and showed as modified after every test run.
 
 ---
 
@@ -282,104 +323,44 @@ Stack versions: React 19, Vite 8, TypeScript 7, vite-plugin-pwa 2, supabase-js 2
 - Never ask for or accept in chat: the database password, the Supabase secret/service key, or the Google (Gemini) key. Only the publishable key is safe in chat or code.
 - Nothing goes to clients or vendors from the app; Jainam shares it himself.
 - No client logins until access rules pass a proper review (planned for months 4–6 originally; Jainam has not approved any client access).
-- The free tier has no backups: download one weekly (Projects page) and keep it on the shared drive. The restore drill is still to do.
+- The free tier has no backups: download one weekly (Projects page) and keep it on the shared drive. Restoring is documented in the README ("Restoring a backup") and rehearsed by `scripts/drill/run_drill.sh`.
 - India's DPDP Act duties are enforceable from mid-May 2027. Plan for consent at onboarding, access logs and deletion at project close (planning guidance, not legal advice).
 
 ---
 
 ## 11. What to build next
 
-### 11.1 Small pending items (do before or alongside Schedule)
-1. **Phone checks Jainam still owes:**
-   - Transcribe the real voice note in Review.
-   - Confirm it as himself, then as the studio account.
-   - Draft a Gujarati or Hindi report.
-   - Edit, remove and restore a log.
-   - Check the studio account sees no Edit option.
-2. **Backup:** download is built (Projects page, owners). Still to do: a **restore drill** (load a backup ZIP into a fresh database and compare counts) and a script to check a ZIP.
-3. **Verification decision:** keep Jainam + the studio account, or the studio account alone with a "checked with team member" tick.
-4. **Display names** for the two accounts (`profiles.full_name`).
-5. **Add Aggrawal Atelier** with its rooms, trades and sheets.
-6. Drawing-issue **acknowledgement** (sent → acknowledged → print posted) and the 48-hour reminder. Not built.
-7. "Revision marked GFC → supersede older, list holders, draft 'R1 replaces R0' message, create a replace-print task". Partly covered by flags; the message draft and task are not built.
+Every planned module is built and live. The work now is proving it with real data.
 
-### 11.2 Decisions and variations (part of the planned "site log and decisions" module; not built)
-- **Decision:**
-  - type (RFI / approval / site instruction), question, answer, decided by, date, cost impact, linked sheet or BOQ item.
-  - Status: open → answered → confirmed in writing → closed.
-- **Variation:**
-  - proposed → costed → client approved → executed → billed.
-  - A decision with cost impact creates a proposed variation.
-- **AI:** draft decisions from voice notes. They stay unverified until confirmed, like summaries.
-- **WhatsApp:** each confirmed decision gets a drafted confirmation message for the project group (Jainam sends it).
+### 11.1 Phone checks Jainam still owes
+1. From before: transcribe a real voice note in Review; confirm it as himself, then as the studio account; draft a Gujarati or Hindi report; edit, remove and restore a log; check the studio account sees no Edit option; try Schedule with real tasks.
+2. New, on Android **and iPhone**: add an estimate for Sparsh Ekaya and export the client PDF; raise and mark paid one fee invoice; log one RA bill to "paid"; add a decision with a cost impact (a variation should appear); add a procurement item linked to a task; open the calendar and download the .ics; build the deck with real images and export PPTX; open Review.
+3. Check the owner-only screens from the studio account: Fees and Finances must say "visible to owners only".
 
-### 11.3 Schedule (part 1 live 23 Nov; part 2 next)
+### 11.2 Choices made during the build (confirm or change)
+1. **Contract clauses:** the "About" clause still says Mumbai and the dispute clause has "[City]" (copied verbatim from his Project Studio). Review flags both. Edit them in Settings after legal advice.
+2. **Committed amount** = quantity × committed rate with no wastage, while the budget includes wastage, so they are not like-for-like.
+3. **Certified and paid** are valued at each bill line's rate, which defaults to the committed rate (or the estimate rate).
+4. **Fee due dates:** an invoice linked to a milestone is due on the milestone's forecast end plus payment terms; raising it fixes the date.
+5. **Money basis:** agreed fee and margin before GST; invoices and cash flow include GST.
+6. **Exports always carry the DRAFT note**; the legal-reviewed tick only records the review. The invoice PDF adds no SAC code or GST split ("check with your CA").
+7. **Bill lines can't be removed** (no removed_at); set quantity to 0.
+8. **Deck rebuild** drops hand-added slides (their images stay in storage), as in the original tool.
+9. **Handled drafts** are still remembered per device.
+10. **Template durations** in Schedule are placeholders.
+11. **AI verification decision** is still open (Jainam + studio account, or studio account alone with a tick).
 
-**Live:** task fields, After links, stage templates, critical path, baseline and reasons, change log, sheet gate (R0), phone tab with critical strip, desktop timeline, Today risks. **Part 2 still to build:** procurement items and order-by dates (and the "needs material on site" gate), the calendar views, drafted messages for automations (late milestone client note, order-by reminder), decision link on a change reason, and auto-prompting the freeze when work orders exist (Money module). Working days default Mon–Sat with a per-project holiday list.
+### 11.3 Known gaps
+- PDFs use built-in fonts: no ₹ sign ("Rs.") and Gujarati or Hindi item names print as "?". Embedding a Noto font would fix both (adds ~300 kB to the export chunk only).
+- Calendar has a month view on desktop but no week view.
+- Drafts are English only.
+- AI line-item suggestions for the estimate were deferred.
+- Not yet done from earlier lists: display names for the two accounts; add Aggrawal Atelier with its rooms and sheets; drawing-issue acknowledgement and 48-hour reminder; "R1 replaces R0" draft and replace-print task; decision link on a schedule change reason; prompt to freeze the baseline when work orders exist.
 
-- **Task fields:**
-  - stage, task, trade, room, owner, duration, "After" (finish-to-start predecessors), planned start and end (**calculated, never typed**), baseline end, status, milestone flag.
-  - Status: planned → in progress → done; blocked; slipped (derived).
-- **Gates:** "needs sheet at R0/GFC" and "needs material on site".
-- **Stage templates** (generated on new project, with default durations and predecessors):
-
-  | Stage | Template tasks | Exit gate |
-  |---|---|---|
-  | Concept | Brief, site measure, layouts, mood | Client approves layout |
-  | Design development | Elevations, 3D, materials, estimate | Design freeze signed |
-  | Working drawings | Electrical, RCP, HVAC, plumbing, joinery, tiling | All sheets at R0 |
-  | BOQ and tendering | BOQ per trade, quotes, comparison | Work orders issued |
-  | Procurement | Long-lead list, samples, orders | Long-lead items ordered |
-  | Execution | Civil, rough-ins, ceiling, carpentry, tiling, paint, fixtures | Trades done, bills certified |
-  | Snagging | Snag list by room, rectification | Zero open snags |
-  | Handover | Final bills, as-built set, warranties, final fee invoice | Client sign-off |
-- **Critical path in our own code:** forward and backward pass, float, critical = zero float. Recalculated on every change.
-- **Baseline:** frozen when work orders are issued. Re-baseline needs owner approval. A date change requires a reason linked to a decision. Summary row: forecast finish vs baseline, days of slip.
-- **Procurement:**
-  - Fields: item, trade, room, spec approved, supplier, lead time, need-on-site date, ordered date, expected date.
-  - Order-by date = need date − lead time.
-  - Status: specified → approved → ordered → on site; at risk (derived).
-- **Automations** (flag and draft only, never send):
-
-  | Trigger | Condition | Action |
-  |---|---|---|
-  | Task end passes | Not done | Mark slipped, re-forecast dependents, flag owner |
-  | Milestone forecast | More than 7 days past baseline | Dashboard risk, draft client note |
-  | Task starts in 7 days | Linked sheet not GFC | Flag blocked |
-  | Daily check | Order-by within 7 days, not ordered | Flag, draft message |
-  | Expected delivery passes | Not on site | Re-forecast linked task |
-- **Views:**
-  - **Timeline (desktop):** bars, critical in forest green, float as an outline, baseline thin line, order-by ring, milestone diamonds, "After" column with arrows only for the selected task, editing on desktop only.
-  - **Phone:** read-only critical-path strip on the project page.
-  - **Calendar:** 8 entry types (milestones, orders, sheets due, visits, fees, bills, decisions, reports), all derived except site visits. Agenda on the phone; month and week on desktop. Filter by project and type. Only milestones carry colour. Tapping opens the source record. Week starts Monday. Later: a feed into the phone's own calendar.
-  - Wireframes for all of these are on the design canvas.
-
-### 11.4 Money (full version)
-- **BOQ item:** trade, room, quantity, rate, and four amounts: budget, committed, certified, paid.
-- **Budget view:** trade totals; tap a trade for its BOQ items. Clients see it read-only, as a shared report or PDF, not a login.
-- **RA bill:**
-  - agency, claimed, certified, GST, status.
-  - Status: submitted → measured → certified → client approved → paid.
-- **Fee invoice:**
-  - milestone, amount, GST, due date.
-  - Status: scheduled → raised → due → paid or overdue. A milestone can trigger it.
-- **Quote:** received → compared → accepted or rejected. A work order is tracked, not issued.
-- **Automations:**
-
-  | Trigger | Condition | Action |
-  |---|---|---|
-  | RA bill certified | Item over budget by more than 5% | Flag overrun, require a linked variation |
-  | RA bill client-approved | Unpaid after 7 days | Draft reminder to client |
-  | Fee milestone reached | Invoice not raised | Prompt GST invoice |
-  | Fee invoice overdue | — | Draft reminders at 3 and 10 days |
-
-### 11.4b From the earlier Studio Dashboard prototype, still to do
-Finances (receivables, payables, margin by project, cash-flow forecast), vendor payments and on-time %, expenses vs budget: all wait for the Money module. Approval permissions per message type and a shared (cross-device) record of sent drafts. Hindi/Gujarati drafts. Dark mode was left out (departs from the off-white look).
-
-### 11.5 Later
+### 11.4 Later
 - AI risk explanations (rules detect, AI only explains) and AI revision diffs (as a checklist).
 - Client login only after an access review; months 4–6 in the original plan.
-- Things deliberately left out: vendor payment ledger and POs; reading or automating WhatsApp; AI progress percentages; Gantt editing on the phone; a native app; SMS sign-in.
+- Things deliberately left out: reading or automating WhatsApp; AI progress percentages; Gantt editing on the phone; a native app; SMS sign-in; dark mode.
 
 ---
 
@@ -434,6 +415,19 @@ Finances (receivables, payables, margin by project, cash-flow forecast), vendor 
 ## 14. Commit history
 
 ```
+7667052 Load new tabs and studio screens on first open (main bundle 842 kB -> 380 kB)
+d98b8b9 Design pass: tab row fades at hidden edges; minus before the rupee sign
+c9b5737 Drafts: decision and order reminders in the outbox; calendar uses the wide layout
+2a1d871 Drafts: unpaid agency bill and fee invoice reminders in the outbox
+37c21d2 Decisions, procurement and calendar
+06d15bc Deck and review module: brief, studio settings, presentation builder, review before export
+b621bbf Money tab: estimate/BOQ with ledger, quotes and work orders, RA bills, variations, client report
+a1a1ef8 Fees module: fee proposal, invoices, studio costs, finances and vendors
+002ea51 Security fingerprint: confirms live matches the setup files
+a3c4650 Access test: every table as signed-out, stranger, coordinator and owner (367 checks)
+1146afc Restore check and restore drill: all 32 tables identical after restore
+2cbbaea Scaffold for money, decisions, procurement, deck and review modules
+e145629 Handover: phone timeline, new routes and screens
 67358d6 Phone layout fixes and studio overview
 e83b5c0 Handover: routes, screens and backup notes
 daa8ebf Handover: schedule part 1 and backup are live
